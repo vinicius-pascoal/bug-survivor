@@ -115,7 +115,7 @@ export default function GamePage() {
           const enemyState = enemy.getState();
           if (!enemyState.active) return;
           const distance = Math.sqrt(
-            Math.pow(projState.x - enemyState.x, 2) + 
+            Math.pow(projState.x - enemyState.x, 2) +
             Math.pow(projState.y - enemyState.y, 2)
           );
           if (distance < projState.radius + enemyState.width / 2) {
@@ -145,7 +145,7 @@ export default function GamePage() {
           const enemyState = enemy.getState();
           if (!enemyState.active) return;
           const distance = Math.sqrt(
-            Math.pow(enemyState.x - playerPos.x, 2) + 
+            Math.pow(enemyState.x - playerPos.x, 2) +
             Math.pow(enemyState.y - playerPos.y, 2)
           );
           if (distance < (enemyState.width / 2 + playerState.width / 2)) {

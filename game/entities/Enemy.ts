@@ -20,7 +20,7 @@ export class Enemy {
 
   constructor(id: string, x: number, y: number) {
     const speed = randomRange(GAME_CONFIG.enemies.minSpeed, GAME_CONFIG.enemies.maxSpeed);
-    
+
     this.state = {
       id,
       x,

@@ -58,18 +58,18 @@ export class XPDropSystem {
       ctx.save();
       ctx.shadowBlur = 10;
       ctx.shadowColor = '#a855f7';
-      
+
       // Draw crystal shape
       ctx.fillStyle = '#a855f7';
       ctx.beginPath();
       ctx.arc(drop.x, drop.y, 6, 0, Math.PI * 2);
       ctx.fill();
-      
+
       ctx.fillStyle = '#d946ef';
       ctx.beginPath();
       ctx.arc(drop.x, drop.y, 3, 0, Math.PI * 2);
       ctx.fill();
-      
+
       ctx.restore();
     });
   }
