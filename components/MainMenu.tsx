@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
+import AboutModal from './AboutModal';
 
 export default function MainMenu() {
   const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -156,6 +158,7 @@ export default function MainMenu() {
           <button
             onMouseEnter={() => setHoveredButton('about')}
             onMouseLeave={() => setHoveredButton(null)}
+            onClick={() => setIsAboutModalOpen(true)}
             className="w-full relative group overflow-hidden"
           >
             <div className="absolute inset-0 bg-linear-to-r from-emerald-500 via-green-400 to-emerald-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
@@ -198,6 +201,9 @@ export default function MainMenu() {
           background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 255, 0.2) 2px, rgba(0, 255, 255, 0.2) 4px)'
         }} />
       </div>
+
+      {/* About Modal */}
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </div>
   );
 }
