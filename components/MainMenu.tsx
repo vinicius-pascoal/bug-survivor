@@ -31,7 +31,7 @@ export default function MainMenu() {
       </div>
 
       {/* Glitch Effect Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/60" />
 
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4">
@@ -47,7 +47,7 @@ export default function MainMenu() {
               unoptimized
               style={{ imageRendering: 'pixelated' }}
             />
-            <h1 className="text-7xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-magenta-500 animate-pulse drop-shadow-[0_0_30px_rgba(168,85,247,0.8)]">
+            <h1 className="text-7xl font-bold tracking-wider text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-purple-500 to-magenta-500 animate-pulse drop-shadow-[0_0_30px_rgba(168,85,247,0.8)]">
               BUG SURVIVOR
             </h1>
           </div>
@@ -65,16 +65,16 @@ export default function MainMenu() {
               className="w-full relative group overflow-hidden"
             >
               {/* Glowing border effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-cyan-400 to-purple-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-linear-to-r from-purple-500 via-cyan-400 to-purple-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
 
               {/* Button content */}
               <div className={`
                 relative px-8 py-5 text-xl font-bold tracking-wider
-                bg-gradient-to-r from-purple-600/90 to-cyan-600/90
+                bg-linear-to-r from-purple-600/90 to-cyan-600/90
                 backdrop-blur-sm
                 text-white rounded-lg
                 transform transition-all duration-300 ease-out
-                ${hoveredButton === 'play' ? 'scale-[1.02] translate-y-[-2px]' : ''}
+                ${hoveredButton === 'play' ? 'scale-[1.02] -translate-y-0.5' : ''}
                 border border-cyan-400/50
                 font-mono
                 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -88,7 +88,7 @@ export default function MainMenu() {
 
               {/* Animated scanline effect on hover */}
               {hoveredButton === 'play' && (
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
               )}
             </button>
           </Link>
@@ -98,15 +98,15 @@ export default function MainMenu() {
             onMouseLeave={() => setHoveredButton(null)}
             className="w-full relative group overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-magenta-500 via-purple-400 to-magenta-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-r from-magenta-500 via-purple-400 to-magenta-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className={`
               relative px-8 py-5 text-xl font-bold tracking-wider
-              bg-gradient-to-r from-magenta-600/90 to-purple-600/90
+              bg-linear-to-r from-magenta-600/90 to-purple-600/90
               backdrop-blur-sm
               text-white rounded-lg
               transform transition-all duration-300 ease-out
-              ${hoveredButton === 'upgrades' ? 'scale-[1.02] translate-y-[-2px]' : ''}
+              ${hoveredButton === 'upgrades' ? 'scale-[1.02] -translate-y-0.5' : ''}
               border border-magenta-400/50
               font-mono
               shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -119,7 +119,7 @@ export default function MainMenu() {
             </div>
 
             {hoveredButton === 'upgrades' && (
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
             )}
           </button>
 
@@ -128,15 +128,15 @@ export default function MainMenu() {
             onMouseLeave={() => setHoveredButton(null)}
             className="w-full relative group overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-400 to-cyan-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-r from-cyan-500 via-blue-400 to-cyan-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className={`
               relative px-8 py-5 text-xl font-bold tracking-wider
-              bg-gradient-to-r from-cyan-600/90 to-blue-600/90
+              bg-linear-to-r from-cyan-600/90 to-blue-600/90
               backdrop-blur-sm
               text-white rounded-lg
               transform transition-all duration-300 ease-out
-              ${hoveredButton === 'options' ? 'scale-[1.02] translate-y-[-2px]' : ''}
+              ${hoveredButton === 'options' ? 'scale-[1.02] -translate-y-0.5' : ''}
               border border-cyan-400/50
               font-mono
               shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -149,7 +149,7 @@ export default function MainMenu() {
             </div>
 
             {hoveredButton === 'options' && (
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
             )}
           </button>
 
@@ -158,15 +158,15 @@ export default function MainMenu() {
             onMouseLeave={() => setHoveredButton(null)}
             className="w-full relative group overflow-hidden"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-r from-emerald-500 via-green-400 to-emerald-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
 
             <div className={`
               relative px-8 py-5 text-xl font-bold tracking-wider
-              bg-gradient-to-r from-emerald-600/90 to-green-600/90
+              bg-linear-to-r from-emerald-600/90 to-green-600/90
               backdrop-blur-sm
               text-white rounded-lg
               transform transition-all duration-300 ease-out
-              ${hoveredButton === 'about' ? 'scale-[1.02] translate-y-[-2px]' : ''}
+              ${hoveredButton === 'about' ? 'scale-[1.02] -translate-y-0.5' : ''}
               border border-emerald-400/50
               font-mono
               shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
@@ -179,7 +179,7 @@ export default function MainMenu() {
             </div>
 
             {hoveredButton === 'about' && (
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
             )}
           </button>
         </div>
