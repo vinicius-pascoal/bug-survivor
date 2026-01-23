@@ -66,7 +66,11 @@ export class Player {
   }
 
   getState(): PlayerState {
-    return { ...this.state };
+    return this.state; // Return direct reference for updates
+  }
+
+  getStateCopy(): PlayerState {
+    return { ...this.state }; // Return copy when needed
   }
 
   getPosition(): { x: number; y: number } {
@@ -93,5 +97,13 @@ export class Player {
     this.state.xpToNextLevel = Math.floor(
       GAME_CONFIG.xp.levelUpBase * Math.pow(GAME_CONFIG.xp.levelUpMultiplier, this.state.level - 1)
     );
+  }
+
+  heal(amount: number) {
+    this.state.health = Math.min(this.state.maxHealth, this.state.health + amount);
+  }
+
+  increaseMaxHealth(amount: number) {
+    this.state.maxHealth += amount;
   }
 }
