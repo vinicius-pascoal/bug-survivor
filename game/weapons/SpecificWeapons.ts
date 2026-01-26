@@ -122,7 +122,7 @@ export class VampiricDaggerWeapon extends BaseWeapon {
           this.applyBleed(enemy.id, enemy.x, enemy.y);
 
           // Lifesteal visual
-          this.particleSystem.createBloodParticles(enemy.x, enemy.y, 3);
+          this.particleSystem.createBloodEffect(enemy.x, enemy.y);
         }
       }
     });
@@ -252,7 +252,7 @@ export class FlameSwordWeapon extends BaseWeapon {
 
           // Aplica queimadura
           this.applyBurn(enemy.id, enemy.x, enemy.y);
-          this.particleSystem.createFire(enemy.x, enemy.y, 8);
+          this.particleSystem.createFireEffect(enemy.x, enemy.y);
         }
       }
     });
