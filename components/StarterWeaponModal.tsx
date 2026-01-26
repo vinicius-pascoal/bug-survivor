@@ -48,7 +48,7 @@ export function StarterWeaponModal({ weapons, onSelectWeapon }: StarterWeaponMod
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2">
           {weapons.map((weaponUpgrade, index) => {
             const weapon = weaponUpgrade.weaponData;
-            
+
             return (
               <button
                 key={index}
@@ -58,7 +58,7 @@ export function StarterWeaponModal({ weapons, onSelectWeapon }: StarterWeaponMod
               >
                 {/* Brilho da raridade */}
                 <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${rarityColors[weapon.rarity]}`} />
-                
+
                 <div className="p-6">
                   {/* Imagem da arma */}
                   <div className="mb-4 flex justify-center">

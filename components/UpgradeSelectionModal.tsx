@@ -11,12 +11,12 @@ interface UpgradeSelectionModalProps {
   playerLevel: number;
 }
 
-export function UpgradeSelectionModal({ 
-  upgrades, 
+export function UpgradeSelectionModal({
+  upgrades,
   onSelectUpgrade,
-  playerLevel 
+  playerLevel
 }: UpgradeSelectionModalProps) {
-  
+
   const rarityColors = {
     [WeaponRarity.COMMON]: 'from-gray-400 to-gray-600',
     [WeaponRarity.UNCOMMON]: 'from-green-400 to-green-600',
@@ -38,7 +38,7 @@ export function UpgradeSelectionModal({
     if (upgrade.type === UpgradeType.WEAPON) {
       const weaponUpgrade = upgrade as WeaponUpgrade;
       const weapon = weaponUpgrade.weaponData;
-      
+
       return (
         <button
           key={index}
@@ -47,7 +47,7 @@ export function UpgradeSelectionModal({
         >
           {/* Header com raridade */}
           <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${rarityColors[weapon.rarity]}`} />
-          
+
           <div className="p-6">
             {/* Badge de tipo */}
             <div className="absolute top-4 right-4">
@@ -105,7 +105,7 @@ export function UpgradeSelectionModal({
       );
     } else if (upgrade.type === UpgradeType.STAT) {
       const statUpgrade = upgrade as StatUpgrade;
-      
+
       return (
         <button
           key={index}
@@ -113,7 +113,7 @@ export function UpgradeSelectionModal({
           className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border-2 border-gray-700 hover:border-green-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden"
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-emerald-600" />
-          
+
           <div className="p-6">
             {/* Badge de tipo */}
             <div className="absolute top-4 right-4">
@@ -148,9 +148,9 @@ export function UpgradeSelectionModal({
             <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-3">
               <p className="text-xs text-gray-400 mb-1">Aumento</p>
               <p className="text-2xl font-bold text-green-400">
-                {statUpgrade.statType.includes('percent') || 
-                 statUpgrade.value < 1 ? 
-                  `+${(statUpgrade.value * 100).toFixed(0)}%` : 
+                {statUpgrade.statType.includes('percent') ||
+                  statUpgrade.value < 1 ?
+                  `+${(statUpgrade.value * 100).toFixed(0)}%` :
                   `+${statUpgrade.value}`
                 }
               </p>

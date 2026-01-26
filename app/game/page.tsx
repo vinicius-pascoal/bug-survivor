@@ -44,7 +44,7 @@ export default function GamePage() {
   const [weaponSlots, setWeaponSlots] = useState<WeaponSlot[]>([]);
   const [playerLevel, setPlayerLevel] = useState(1);
   const nearbyChestRef = useRef<Chest | null>(null);
-  
+
   // Estados para sistema de upgrades
   const [showStarterWeaponSelection, setShowStarterWeaponSelection] = useState(true);
   const [showUpgradeSelection, setShowUpgradeSelection] = useState(false);
@@ -203,14 +203,14 @@ export default function GamePage() {
           const newLevel = playerState.level;
           setPlayerLevel(newLevel);
           setWeaponSlots(player.getWeaponInventory().getSlots());
-          
+
           // Gerar opções de upgrade
           upgradeSystemRef.current.setPlayerLevel(newLevel);
           const hasSpace = player.hasWeaponSpace();
           const options = upgradeSystemRef.current.generateUpgradeOptions(3, hasSpace);
           setUpgradeOptions(options);
           setShowUpgradeSelection(true);
-          
+
           engine.pause();
         }
       }
@@ -312,7 +312,7 @@ export default function GamePage() {
     });
 
     engine.start();
-    
+
     // Pausa o jogo no início para seleção de arma
     engine.pause();
     setIsLoaded(true);
@@ -380,7 +380,7 @@ export default function GamePage() {
       }
     } else if (upgrade.type === UpgradeType.STAT) {
       const statUpgrade = upgrade as StatUpgrade;
-      
+
       switch (statUpgrade.statType) {
         case StatType.MAX_HEALTH:
           playerRef.current.increaseMaxHealth(statUpgrade.value);
