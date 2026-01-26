@@ -41,7 +41,7 @@ export abstract class BaseWeapon {
   abstract render(ctx: CanvasRenderingContext2D, playerX: number, playerY: number): void;
 
   // Atualiza a arma
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>, playerAngle: number = 0): WeaponAttackResult | null {
     this.lastAttackTime += deltaTime;
 
     // Verifica se pode atacar

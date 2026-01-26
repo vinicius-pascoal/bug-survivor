@@ -1,4 +1,4 @@
-import { BaseWeapon, WeaponAttackResult } from './BaseWeapon';
+import { BaseWeapon, WeaponAttackResult, StatusEffectType } from './BaseWeapon';
 
 // Espada básica - ataque corpo a corpo em arco
 export class SwordWeapon extends BaseWeapon {
@@ -18,7 +18,7 @@ export class SwordWeapon extends BaseWeapon {
     this.lastPlayerAngle = playerAngle;
 
     const hitEnemies: string[] = [];
-    const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
+    const effects: Array<{ enemyId: string; effectType: StatusEffectType; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
@@ -92,7 +92,7 @@ export class VampiricDaggerWeapon extends BaseWeapon {
     playerAngle: number = 0
   ): WeaponAttackResult {
     const hitEnemies: string[] = [];
-    const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
+    const effects: Array<{ enemyId: string; effectType: StatusEffectType; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
@@ -160,7 +160,7 @@ export class GreatswordWeapon extends BaseWeapon {
   ): WeaponAttackResult {
     this.lastPlayerAngle = playerAngle;
     const hitEnemies: string[] = [];
-    const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
+    const effects: Array<{ enemyId: string; effectType: StatusEffectType; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
@@ -227,7 +227,7 @@ export class FlameSwordWeapon extends BaseWeapon {
   ): WeaponAttackResult {
     this.lastPlayerAngle = playerAngle;
     const hitEnemies: string[] = [];
-    const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
+    const effects: Array<{ enemyId: string; effectType: StatusEffectType; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
@@ -260,7 +260,7 @@ export class FlameSwordWeapon extends BaseWeapon {
     return { damage: totalDamage, hitEnemies, effects, particleEffects };
   }
 
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>, playerAngle: number = 0): WeaponAttackResult | null {
     // Atualiza rastro de fogo
     for (let i = this.fireTrail.length - 1; i >= 0; i--) {
       this.fireTrail[i].life -= deltaTime;
@@ -335,7 +335,7 @@ export class PiercerWeapon extends BaseWeapon {
     return { damage: 0, hitEnemies: [], effects: [], particleEffects: [] };
   }
 
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>, playerAngle: number = 0): WeaponAttackResult | null {
     const hitEnemies: string[] = [];
     let totalDamage = 0;
 
@@ -347,7 +347,7 @@ export class PiercerWeapon extends BaseWeapon {
       proj.life -= deltaTime;
 
       // Verifica colisões
-      enemies.forEach((enemy: any) => {
+      enemies.forEach((enemy: { id: string; x: number; y: number; width: number; height: number }) => {
         if (proj.pierced.has(enemy.id)) return;
 
         const distance = Math.sqrt(
