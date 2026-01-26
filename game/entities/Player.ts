@@ -3,6 +3,7 @@ import { WeaponInventory } from '../systems/WeaponInventory';
 import { WeaponData } from '../types/WeaponTypes';
 import { WeaponCombatSystem } from '../systems/WeaponCombatSystem';
 import { Enemy } from './Enemy';
+import { SpriteAnimationSystem } from '../systems/SpriteAnimationSystem';
 
 export interface PlayerState {
   x: number;
@@ -22,6 +23,8 @@ export class Player {
   private weaponInventory: WeaponInventory;
   private combatSystem: WeaponCombatSystem;
   private levelUpCallbacks: Array<(level: number) => void> = [];
+  private spriteSystem: SpriteAnimationSystem;
+  private lastInput: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor(x: number, y: number) {
     this.state = {
@@ -38,12 +41,19 @@ export class Player {
     };
     this.weaponInventory = new WeaponInventory();
     this.combatSystem = new WeaponCombatSystem();
+    this.spriteSystem = new SpriteAnimationSystem();
   }
 
   update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[]) {
+    // Store input for animation
+    this.lastInput = input;
+    
     // Update position based on input
     this.state.x += input.x * this.state.speed * deltaTime;
     this.state.y += input.y * this.state.speed * deltaTime;
+
+    // Update sprite animation
+    this.spriteSystem.update(deltaTime, input);
 
     // Update weapon inventory
     this.weaponInventory.update(deltaTime);
@@ -90,29 +100,9 @@ export class Player {
     // Render weapon effects first (behind player)
     this.combatSystem.render(ctx, this.state.x, this.state.y);
 
-    // Draw player (temporary visual - will be replaced with sprites)
-    ctx.save();
-
-    // Draw glow effect
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = '#06b6d4';
-
-    // Draw player body
-    ctx.fillStyle = '#06b6d4';
-    ctx.fillRect(
-      this.state.x - this.state.width / 2,
-      this.state.y - this.state.height / 2,
-      this.state.width,
-      this.state.height
-    );
-
-    // Draw center dot
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(this.state.x, this.state.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
+    // Draw player sprite (visual maior que hitbox)
+    const spriteSize = GAME_CONFIG.player.spriteSize || this.state.width * 2;
+    this.spriteSystem.render(ctx, this.state.x, this.state.y, spriteSize, spriteSize);
   }
 
   getState(): PlayerState {

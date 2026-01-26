@@ -8,7 +8,8 @@ export const GAME_CONFIG = {
   // Player
   player: {
     speed: 200, // pixels per second
-    size: 32,
+    size: 24, // hitbox size (menor que o sprite visual)
+    spriteSize: 64, // tamanho visual do sprite (maior que hitbox)
     maxHealth: 100,
   },
 
