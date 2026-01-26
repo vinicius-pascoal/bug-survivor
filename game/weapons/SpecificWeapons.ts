@@ -5,21 +5,24 @@ export class SwordWeapon extends BaseWeapon {
   private swingAngle: number = 0;
   private isSwinging: boolean = false;
   private swingSpeed: number = 10;
+  private lastPlayerAngle: number = 0;
 
   attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle: number = 0
   ): WeaponAttackResult {
     this.isSwinging = true;
     this.swingAngle = 0;
+    this.lastPlayerAngle = playerAngle;
 
     const hitEnemies: string[] = [];
     const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
-    // Ataque em arco frontal (120 graus)
+    // Ataque em arco frontal (120 graus) na direção que o jogador está olhando
     const range = this.weaponInstance.data.stats.range;
     const arcAngle = Math.PI * 0.66; // 120 graus
 
@@ -27,13 +30,18 @@ export class SwordWeapon extends BaseWeapon {
       const dx = enemy.x - playerX;
       const dy = enemy.y - playerY;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      const angle = Math.atan2(dy, dx);
+      const enemyAngle = Math.atan2(dy, dx);
 
-      // Verifica se está no alcance e no arco de ataque
+      // Verifica se está no alcance e no arco de ataque baseado na direção do jogador
       if (distance <= range + enemy.width / 2) {
-        // Verifica ângulo (assumindo que o jogador ataca para frente, ângulo 0)
-        const normalizedAngle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        if (normalizedAngle < arcAngle / 2 || normalizedAngle > Math.PI * 2 - arcAngle / 2) {
+        // Calcula a diferença angular entre a direção do jogador e a posição do inimigo
+        let angleDiff = enemyAngle - playerAngle;
+        // Normaliza para -PI a PI
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+        // Verifica se está dentro do arco de ataque
+        if (Math.abs(angleDiff) <= arcAngle / 2) {
           const damage = this.calculateDamage();
           totalDamage += damage;
           hitEnemies.push(enemy.id);
@@ -54,8 +62,9 @@ export class SwordWeapon extends BaseWeapon {
 
     ctx.save();
     ctx.translate(playerX, playerY);
+    ctx.rotate(this.lastPlayerAngle);
 
-    // Desenha arco de ataque
+    // Desenha arco de ataque na direção do jogador
     ctx.strokeStyle = '#fbbf24';
     ctx.lineWidth = 3;
     ctx.globalAlpha = 0.5;
@@ -79,38 +88,44 @@ export class VampiricDaggerWeapon extends BaseWeapon {
   attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle: number = 0
   ): WeaponAttackResult {
     const hitEnemies: string[] = [];
     const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
-    // Ataca o inimigo mais próximo
-    const nearest = this.findNearestEnemy(playerX, playerY, enemies);
+    // Ataca inimigos na direção que o jogador está olhando
+    const range = this.weaponInstance.data.stats.range;
+    const arcAngle = Math.PI / 2; // 90 graus - mais focado que a espada
 
-    if (nearest && nearest.distance <= this.weaponInstance.data.stats.range) {
-      const damage = this.calculateDamage();
-      totalDamage += damage;
-      hitEnemies.push(nearest.id);
+    enemies.forEach(enemy => {
+      const dx = enemy.x - playerX;
+      const dy = enemy.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const enemyAngle = Math.atan2(dy, dx);
 
-      // Efeito de sangue
-      this.applyBleed(nearest.id, nearest.x, nearest.y);
+      if (distance <= range) {
+        // Calcula a diferença angular
+        let angleDiff = enemyAngle - playerAngle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-      // Lifesteal visual
-      this.particleSystem.createTrail(nearest.x, nearest.y, '#ef4444', 5);
+        // Ataca apenas inimigos na frente
+        if (Math.abs(angleDiff) <= arcAngle / 2) {
+          const damage = this.calculateDamage();
+          totalDamage += damage;
+          hitEnemies.push(enemy.id);
 
-      // Linha de lifesteal do inimigo ao jogador
-      const steps = 10;
-      for (let i = 0; i < steps; i++) {
-        const t = i / steps;
-        const x = nearest.x + (playerX - nearest.x) * t;
-        const y = nearest.y + (playerY - nearest.y) * t;
-        setTimeout(() => {
-          this.particleSystem.createTrail(x, y, '#ef4444', 3);
-        }, i * 20);
+          // Efeito de sangue
+          this.applyBleed(enemy.id, enemy.x, enemy.y);
+
+          // Lifesteal visual
+          this.particleSystem.createBloodParticles(enemy.x, enemy.y, 3);
+        }
       }
-    }
+    });
 
     return { damage: totalDamage, hitEnemies, effects, particleEffects };
   }
@@ -135,44 +150,48 @@ export class VampiricDaggerWeapon extends BaseWeapon {
 export class GreatswordWeapon extends BaseWeapon {
   private chargeTime: number = 0;
   private isCharging: boolean = false;
+  private lastPlayerAngle: number = 0;
 
   attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle: number = 0
   ): WeaponAttackResult {
+    this.lastPlayerAngle = playerAngle;
     const hitEnemies: string[] = [];
     const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
+    const range = this.weaponInstance.data.stats.range;
     const areaRadius = this.weaponInstance.data.stats.areaOfEffect || 80;
+    const arcAngle = Math.PI; // 180 graus - ataque amplo
 
-    // Ataque em área circular frontal
-    const enemiesInArea = this.findEnemiesInRadius(
-      playerX,
-      playerY + areaRadius / 2,
-      areaRadius,
-      enemies
-    );
-
-    enemiesInArea.forEach(enemy => {
-      const damage = this.calculateDamage();
-      totalDamage += damage;
-      hitEnemies.push(enemy.id);
-
-      // Empurra inimigos (knockback)
+    // Ataque em arco amplo na direção que o jogador está olhando
+    enemies.forEach(enemy => {
       const dx = enemy.x - playerX;
       const dy = enemy.y - playerY;
-      const angle = Math.atan2(dy, dx);
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const enemyAngle = Math.atan2(dy, dx);
 
-      // Efeito de impacto pesado
-      this.particleSystem.createExplosion(enemy.x, enemy.y, 12, '#f59e0b', 150, 5);
-      this.particleSystem.createSparks(enemy.x, enemy.y, 8, '#fbbf24');
+      if (distance <= range + areaRadius / 2) {
+        // Calcula a diferença angular
+        let angleDiff = enemyAngle - playerAngle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+        // Verifica se está dentro do arco de ataque amplo
+        if (Math.abs(angleDiff) <= arcAngle / 2) {
+          const damage = this.calculateDamage();
+          totalDamage += damage;
+          hitEnemies.push(enemy.id);
+
+          // Efeito de impacto pesado
+          this.particleSystem.createExplosion(enemy.x, enemy.y, 10, '#fb923c');
+        }
+      }
     });
-
-    // Onda de choque visual
-    this.particleSystem.createCircle(playerX, playerY + areaRadius / 2, areaRadius, '#f59e0b', 30);
 
     return { damage: totalDamage, hitEnemies, effects, particleEffects };
   }
@@ -198,41 +217,50 @@ export class GreatswordWeapon extends BaseWeapon {
 // Espada flamejante - causa queimadura e deixa rastro de fogo
 export class FlameSwordWeapon extends BaseWeapon {
   private fireTrail: Array<{ x: number; y: number; life: number }> = [];
+  private lastPlayerAngle: number = 0;
 
   attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle: number = 0
   ): WeaponAttackResult {
+    this.lastPlayerAngle = playerAngle;
     const hitEnemies: string[] = [];
     const effects: Array<{ enemyId: string; effectType: any; duration: number }> = [];
     const particleEffects: Array<{ x: number; y: number; type: string }> = [];
     let totalDamage = 0;
 
-    // Ataque frontal com fogo
     const range = this.weaponInstance.data.stats.range;
+    const arcAngle = Math.PI * 0.8; // 144 graus
 
     enemies.forEach(enemy => {
-      if (this.isInRange(enemy.x, enemy.y, playerX, playerY, range)) {
-        const damage = this.calculateDamage();
-        totalDamage += damage;
-        hitEnemies.push(enemy.id);
+      const dx = enemy.x - playerX;
+      const dy = enemy.y - playerY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const enemyAngle = Math.atan2(dy, dx);
 
-        // Aplica queimadura
-        this.applyBurn(enemy.id, enemy.x, enemy.y);
+      if (distance <= range) {
+        let angleDiff = enemyAngle - playerAngle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-        // Efeito de fogo
-        this.particleSystem.createFireEffect(enemy.x, enemy.y);
+        if (Math.abs(angleDiff) <= arcAngle / 2) {
+          const damage = this.calculateDamage();
+          totalDamage += damage;
+          hitEnemies.push(enemy.id);
+
+          // Aplica queimadura
+          this.applyBurn(enemy.id, enemy.x, enemy.y);
+          this.particleSystem.createFire(enemy.x, enemy.y, 8);
+        }
       }
     });
-
-    // Cria rastro de fogo
-    this.fireTrail.push({ x: playerX, y: playerY, life: 2 });
 
     return { damage: totalDamage, hitEnemies, effects, particleEffects };
   }
 
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[]): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
     // Atualiza rastro de fogo
     for (let i = this.fireTrail.length - 1; i >= 0; i--) {
       this.fireTrail[i].life -= deltaTime;
@@ -247,7 +275,7 @@ export class FlameSwordWeapon extends BaseWeapon {
       }
     }
 
-    return super.update(deltaTime, playerX, playerY, enemies);
+    return super.update(deltaTime, playerX, playerY, enemies, playerAngle);
   }
 
   render(ctx: CanvasRenderingContext2D, playerX: number, playerY: number): void {
@@ -289,31 +317,25 @@ export class PiercerWeapon extends BaseWeapon {
   attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle: number = 0
   ): WeaponAttackResult {
-    // Encontra inimigo mais próximo para mirar
-    const nearest = this.findNearestEnemy(playerX, playerY, enemies);
+    // Dispara na direção que o jogador está olhando
+    const speed = 400;
 
-    if (nearest) {
-      const dx = nearest.x - playerX;
-      const dy = nearest.y - playerY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const speed = 400;
-
-      this.projectiles.push({
-        x: playerX,
-        y: playerY,
-        vx: (dx / distance) * speed,
-        vy: (dy / distance) * speed,
-        life: 2,
-        pierced: new Set(),
-      });
-    }
+    this.projectiles.push({
+      x: playerX,
+      y: playerY,
+      vx: Math.cos(playerAngle) * speed,
+      vy: Math.sin(playerAngle) * speed,
+      life: 2,
+      pierced: new Set(),
+    });
 
     return { damage: 0, hitEnemies: [], effects: [], particleEffects: [] };
   }
 
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[]): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
     const hitEnemies: string[] = [];
     let totalDamage = 0;
 
@@ -353,7 +375,7 @@ export class PiercerWeapon extends BaseWeapon {
       }
     }
 
-    const baseResult = super.update(deltaTime, playerX, playerY, enemies);
+    const baseResult = super.update(deltaTime, playerX, playerY, enemies, playerAngle);
 
     if (hitEnemies.length > 0) {
       return {

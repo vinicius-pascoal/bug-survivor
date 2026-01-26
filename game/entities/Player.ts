@@ -47,7 +47,7 @@ export class Player {
   update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[]) {
     // Store input for animation
     this.lastInput = input;
-    
+
     // Update position based on input
     this.state.x += input.x * this.state.speed * deltaTime;
     this.state.y += input.y * this.state.speed * deltaTime;
@@ -77,8 +77,12 @@ export class Player {
       };
     });
 
+    // Get player facing direction
+    const playerDirection = this.spriteSystem.getCurrentDirection();
+    const playerAngle = this.spriteSystem.getDirectionAngle(playerDirection);
+
     // Update combat system (handles attacks, effects, particles)
-    const combatResults = this.combatSystem.update(deltaTime, this.state.x, this.state.y, enemyData);
+    const combatResults = this.combatSystem.update(deltaTime, this.state.x, this.state.y, enemyData, playerAngle);
 
     // Apply damage to enemies
     combatResults.totalDamage.forEach((damage: number, enemyId: string) => {

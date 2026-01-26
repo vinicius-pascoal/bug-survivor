@@ -119,7 +119,8 @@ export class WeaponCombatSystem {
     deltaTime: number,
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number; active: boolean }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number; active: boolean }>,
+    playerAngle: number = 0
   ): {
     totalDamage: Map<string, number>;
     totalLifesteal: number;
@@ -142,7 +143,7 @@ export class WeaponCombatSystem {
 
     // Atualiza cada arma
     this.activeWeapons.forEach((weapon) => {
-      const result = weapon.update(deltaTime, playerX, playerY, activeEnemies);
+      const result = weapon.update(deltaTime, playerX, playerY, activeEnemies, playerAngle);
 
       if (result) {
         // Acumula dano por inimigo

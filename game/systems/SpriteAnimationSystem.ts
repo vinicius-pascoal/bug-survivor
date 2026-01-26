@@ -21,7 +21,7 @@ export class SpriteAnimationSystem {
     const animations = [
       // Idle
       { key: 'idle-south', path: '/tvheadman/a_tv_head_man_using_a_moleton_breathing-idle_south.gif' },
-      
+
       // Walking - 8 direções
       { key: 'walking-north', path: '/tvheadman/andando/a_tv_head_man_using_a_moleton_walking-8-frames_north.gif' },
       { key: 'walking-north-east', path: '/tvheadman/andando/a_tv_head_man_using_a_moleton_walking-8-frames_north-east.gif' },
@@ -31,7 +31,7 @@ export class SpriteAnimationSystem {
       { key: 'walking-south-west', path: '/tvheadman/andando/a_tv_head_man_using_a_moleton_walking-8-frames_south-west.gif' },
       { key: 'walking-west', path: '/tvheadman/andando/a_tv_head_man_using_a_moleton_walking-8-frames_west.gif' },
       { key: 'walking-north-west', path: '/tvheadman/andando/a_tv_head_man_using_a_moleton_walking-8-frames_north-west.gif' },
-      
+
       // Running - 8 direções
       { key: 'running-north', path: '/tvheadman/correndo/a_tv_head_man_using_a_moleton_running-6-frames_north.gif' },
       { key: 'running-north-east', path: '/tvheadman/correndo/a_tv_head_man_using_a_moleton_running-6-frames_north-east.gif' },
@@ -130,7 +130,7 @@ export class SpriteAnimationSystem {
     const sprite = this.sprites.get(this.currentAnimation);
     if (sprite && sprite.complete) {
       ctx.save();
-      
+
       // Desenhar sprite centralizado
       ctx.drawImage(
         sprite,
@@ -152,5 +152,30 @@ export class SpriteAnimationSystem {
 
   isReady(): boolean {
     return this.isLoaded;
+  }
+
+  getCurrentDirection(): Direction {
+    // Extrai a direção da animação atual
+    if (this.currentAnimation.includes('idle')) {
+      return 'south'; // direção padrão
+    }
+    const parts = this.currentAnimation.split('-');
+    // Remove o tipo de animação (walking/running) e pega a direção
+    return parts.slice(1).join('-') as Direction;
+  }
+
+  getDirectionAngle(direction?: Direction): number {
+    const dir = direction || this.getCurrentDirection();
+    const angleMap: Record<Direction, number> = {
+      'east': 0,
+      'south-east': Math.PI / 4,
+      'south': Math.PI / 2,
+      'south-west': (3 * Math.PI) / 4,
+      'west': Math.PI,
+      'north-west': (5 * Math.PI) / 4,
+      'north': (3 * Math.PI) / 2,
+      'north-east': (7 * Math.PI) / 4,
+    };
+    return angleMap[dir];
   }
 }

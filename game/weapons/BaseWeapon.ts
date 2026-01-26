@@ -33,20 +33,21 @@ export abstract class BaseWeapon {
   abstract attack(
     playerX: number,
     playerY: number,
-    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>
+    enemies: Array<{ id: string; x: number; y: number; width: number; height: number }>,
+    playerAngle?: number
   ): WeaponAttackResult;
 
   // Método abstrato para renderização
   abstract render(ctx: CanvasRenderingContext2D, playerX: number, playerY: number): void;
 
   // Atualiza a arma
-  update(deltaTime: number, playerX: number, playerY: number, enemies: any[]): WeaponAttackResult | null {
+  update(deltaTime: number, playerX: number, playerY: number, enemies: any[], playerAngle: number = 0): WeaponAttackResult | null {
     this.lastAttackTime += deltaTime;
 
     // Verifica se pode atacar
     if (this.lastAttackTime >= this.attackCooldown) {
       this.lastAttackTime = 0;
-      return this.attack(playerX, playerY, enemies);
+      return this.attack(playerX, playerY, enemies, playerAngle);
     }
 
     return null;
