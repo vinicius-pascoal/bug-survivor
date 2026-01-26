@@ -25,6 +25,10 @@ export class Player {
   private levelUpCallbacks: Array<(level: number) => void> = [];
   private spriteSystem: SpriteAnimationSystem;
   private lastInput: { x: number; y: number } = { x: 0, y: 0 };
+  private damageFlashTimer: number = 0;
+  private damageFlashDuration: number = 0.2; // 200ms de flash vermelho
+  private invulnerabilityTimer: number = 0;
+  private invulnerabilityDuration: number = 0.5; // 500ms de invulnerabilidade após dano
 
   constructor(x: number, y: number) {
     this.state = {
@@ -47,6 +51,16 @@ export class Player {
   update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[]) {
     // Store input for animation
     this.lastInput = input;
+
+    // Update damage flash timer
+    if (this.damageFlashTimer > 0) {
+      this.damageFlashTimer -= deltaTime;
+    }
+
+    // Update invulnerability timer
+    if (this.invulnerabilityTimer > 0) {
+      this.invulnerabilityTimer -= deltaTime;
+    }
 
     // Update position based on input
     this.state.x += input.x * this.state.speed * deltaTime;
@@ -104,9 +118,38 @@ export class Player {
     // Render weapon effects first (behind player)
     this.combatSystem.render(ctx, this.state.x, this.state.y);
 
+    ctx.save();
+
+    // Apply damage flash effect
+    if (this.damageFlashTimer > 0) {
+      const flashIntensity = this.damageFlashTimer / this.damageFlashDuration;
+      ctx.globalCompositeOperation = 'lighter';
+
+      // Red flash overlay
+      ctx.fillStyle = `rgba(255, 0, 0, ${flashIntensity * 0.6})`;
+      ctx.beginPath();
+      const spriteSize = GAME_CONFIG.player.spriteSize || this.state.width * 2;
+      ctx.arc(this.state.x, this.state.y, spriteSize / 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Apply invulnerability flicker effect
+    if (this.invulnerabilityTimer > 0) {
+      // Flicker by alternating opacity
+      const flickerRate = 10; // flickers per second
+      const flickerPhase = (this.invulnerabilityTimer * flickerRate) % 1;
+      if (flickerPhase < 0.5) {
+        ctx.globalAlpha = 0.3;
+      }
+    }
+
     // Draw player sprite (visual maior que hitbox)
     const spriteSize = GAME_CONFIG.player.spriteSize || this.state.width * 2;
     this.spriteSystem.render(ctx, this.state.x, this.state.y, spriteSize, spriteSize);
+
+    ctx.restore();
   }
 
   getState(): PlayerState {
@@ -122,7 +165,24 @@ export class Player {
   }
 
   takeDamage(damage: number): boolean {
+    // Check invulnerability
+    if (this.invulnerabilityTimer > 0) {
+      return false; // No damage during invulnerability
+    }
+
     this.state.health = Math.max(0, this.state.health - damage);
+
+    // Activate damage effects
+    this.damageFlashTimer = this.damageFlashDuration;
+    this.invulnerabilityTimer = this.invulnerabilityDuration;
+
+    // Create damage particles
+    const particleSystem = this.combatSystem.getParticleSystem();
+    if (particleSystem) {
+      particleSystem.createExplosion(this.state.x, this.state.y, 12, '#ef4444', 100, 4);
+      particleSystem.createSparks(this.state.x, this.state.y, 8, '#dc2626');
+    }
+
     return this.state.health <= 0;
   }
 
