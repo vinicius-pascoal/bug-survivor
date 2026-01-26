@@ -220,6 +220,54 @@ export class Player {
 
   increaseMaxHealth(amount: number) {
     this.state.maxHealth += amount;
+    this.state.health += amount; // Also heal by the amount increased
+  }
+
+  increaseSpeed(multiplier: number) {
+    this.state.speed *= (1 + multiplier);
+  }
+
+  increaseDamage(multiplier: number) {
+    // Apply damage multiplier to all weapons
+    const slots = this.weaponInventory.getSlots();
+    slots.forEach(slot => {
+      if (slot.weapon) {
+        slot.weapon.data.stats.damage *= (1 + multiplier);
+      }
+    });
+  }
+
+  increaseAttackSpeed(multiplier: number) {
+    // Apply attack speed multiplier to all weapons
+    const slots = this.weaponInventory.getSlots();
+    slots.forEach(slot => {
+      if (slot.weapon) {
+        slot.weapon.data.stats.attackSpeed *= (1 + multiplier);
+      }
+    });
+  }
+
+  increaseCritChance(amount: number) {
+    // Apply crit chance to all weapons
+    const slots = this.weaponInventory.getSlots();
+    slots.forEach(slot => {
+      if (slot.weapon) {
+        slot.weapon.data.stats.critChance = Math.min(1, slot.weapon.data.stats.critChance + amount);
+      }
+    });
+  }
+
+  increaseAreaOfEffect(multiplier: number) {
+    // Apply area multiplier to all weapons
+    const slots = this.weaponInventory.getSlots();
+    slots.forEach(slot => {
+      if (slot.weapon) {
+        slot.weapon.data.stats.range *= (1 + multiplier);
+        if (slot.weapon.data.stats.areaOfEffect) {
+          slot.weapon.data.stats.areaOfEffect *= (1 + multiplier);
+        }
+      }
+    });
   }
 
   // Métodos de inventário de armas

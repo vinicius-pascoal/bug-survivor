@@ -15,7 +15,11 @@ import { WeaponSlot } from '@/game/systems/WeaponInventory';
 import { WeaponAcquiredModal } from '@/components/WeaponAcquiredModal';
 import { WeaponReplaceModal } from '@/components/WeaponReplaceModal';
 import { WeaponInventoryUI } from '@/components/WeaponInventoryUI';
+import { UpgradeSelectionModal } from '@/components/UpgradeSelectionModal';
+import { StarterWeaponModal } from '@/components/StarterWeaponModal';
 import { Chest } from '@/game/entities/Chest';
+import { UpgradeSystem } from '@/game/upgrades/UpgradeSystem';
+import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, StatType } from '@/game/types/UpgradeTypes';
 
 export default function GamePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -30,7 +34,6 @@ export default function GamePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [showLevelUp, setShowLevelUp] = useState(false);
   const [survivalTime, setSurvivalTime] = useState(0);
   const [killCount, setKillCount] = useState(0);
 
@@ -41,6 +44,12 @@ export default function GamePage() {
   const [weaponSlots, setWeaponSlots] = useState<WeaponSlot[]>([]);
   const [playerLevel, setPlayerLevel] = useState(1);
   const nearbyChestRef = useRef<Chest | null>(null);
+  
+  // Estados para sistema de upgrades
+  const [showStarterWeaponSelection, setShowStarterWeaponSelection] = useState(true);
+  const [showUpgradeSelection, setShowUpgradeSelection] = useState(false);
+  const [upgradeOptions, setUpgradeOptions] = useState<Upgrade[]>([]);
+  const upgradeSystemRef = useRef<UpgradeSystem>(new UpgradeSystem());
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -191,9 +200,17 @@ export default function GamePage() {
       if (collectedXP > 0) {
         const leveledUp = player.gainXP(collectedXP);
         if (leveledUp) {
-          setShowLevelUp(true);
-          setPlayerLevel(playerState.level);
+          const newLevel = playerState.level;
+          setPlayerLevel(newLevel);
           setWeaponSlots(player.getWeaponInventory().getSlots());
+          
+          // Gerar opções de upgrade
+          upgradeSystemRef.current.setPlayerLevel(newLevel);
+          const hasSpace = player.hasWeaponSpace();
+          const options = upgradeSystemRef.current.generateUpgradeOptions(3, hasSpace);
+          setUpgradeOptions(options);
+          setShowUpgradeSelection(true);
+          
           engine.pause();
         }
       }
@@ -295,6 +312,9 @@ export default function GamePage() {
     });
 
     engine.start();
+    
+    // Pausa o jogo no início para seleção de arma
+    engine.pause();
     setIsLoaded(true);
 
     // Inicializa estados de UI
@@ -339,6 +359,54 @@ export default function GamePage() {
     engineRef.current?.resume();
   };
 
+  // Funções para sistema de upgrades
+  const handleStarterWeaponSelect = (weaponUpgrade: WeaponUpgrade) => {
+    if (playerRef.current) {
+      playerRef.current.addWeapon(weaponUpgrade.weaponData);
+      setWeaponSlots(playerRef.current.getWeaponInventory().getSlots());
+      setShowStarterWeaponSelection(false);
+      engineRef.current?.resume();
+    }
+  };
+
+  const handleUpgradeSelect = (upgrade: Upgrade) => {
+    if (!playerRef.current) return;
+
+    if (upgrade.type === UpgradeType.WEAPON) {
+      const weaponUpgrade = upgrade as WeaponUpgrade;
+      if (playerRef.current.hasWeaponSpace()) {
+        playerRef.current.addWeapon(weaponUpgrade.weaponData);
+        setWeaponSlots(playerRef.current.getWeaponInventory().getSlots());
+      }
+    } else if (upgrade.type === UpgradeType.STAT) {
+      const statUpgrade = upgrade as StatUpgrade;
+      
+      switch (statUpgrade.statType) {
+        case StatType.MAX_HEALTH:
+          playerRef.current.increaseMaxHealth(statUpgrade.value);
+          break;
+        case StatType.SPEED:
+          playerRef.current.increaseSpeed(statUpgrade.value);
+          break;
+        case StatType.DAMAGE:
+          playerRef.current.increaseDamage(statUpgrade.value);
+          break;
+        case StatType.ATTACK_SPEED:
+          playerRef.current.increaseAttackSpeed(statUpgrade.value);
+          break;
+        case StatType.CRIT_CHANCE:
+          playerRef.current.increaseCritChance(statUpgrade.value);
+          break;
+        case StatType.AREA_OF_EFFECT:
+          playerRef.current.increaseAreaOfEffect(statUpgrade.value);
+          break;
+      }
+    }
+
+    setShowUpgradeSelection(false);
+    engineRef.current?.resume();
+  };
+
   return (
     <div className="relative min-h-screen w-full bg-black flex items-center justify-center">
       <canvas
@@ -347,26 +415,13 @@ export default function GamePage() {
         height={GAME_CONFIG.canvas.height}
         className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] max-w-full h-auto"
       />
-      {isPaused && !showLevelUp && (
+      {isPaused && !showUpgradeSelection && !showStarterWeaponSelection && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-linear-to-br from-purple-900/50 to-cyan-900/50 p-8 rounded-lg border-2 border-cyan-400 shadow-[0_0_50px_rgba(6,182,212,0.8)]">
             <h2 className="text-4xl font-bold text-cyan-400 mb-8 text-center font-mono">&gt; PAUSADO</h2>
             <div className="flex flex-col gap-4">
               <button onClick={() => { engineRef.current?.resume(); setIsPaused(false); }} className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded font-mono transition-all">&gt; CONTINUAR</button>
               <Link href="/"><button className="w-full px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded font-mono transition-all">&gt; MENU PRINCIPAL</button></Link>
-            </div>
-          </div>
-        </div>
-      )}
-      {showLevelUp && (
-        <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-50">
-          <div className="bg-linear-to-br from-purple-900/80 to-cyan-900/80 p-8 rounded-lg border-2 border-purple-400 shadow-[0_0_60px_rgba(168,85,247,0.8)] max-w-2xl">
-            <h2 className="text-5xl font-bold text-purple-400 mb-4 text-center font-mono animate-pulse">&gt; LEVEL UP!</h2>
-            <p className="text-cyan-300 text-center mb-8 font-mono">Level {playerRef.current?.getState().level || 1}</p>
-            <div className="grid grid-cols-3 gap-4">
-              <button onClick={() => { weaponRef.current?.upgrade(); setShowLevelUp(false); engineRef.current?.resume(); }} className="p-6 bg-linear-to-br from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg border-2 border-cyan-400 transition-all hover:scale-105"><div className="text-2xl mb-2"></div><h3 className="text-lg font-bold text-white mb-2">+1 Data Disk</h3><p className="text-sm text-cyan-200">Adiciona mais um disco orbital</p></button>
-              <button onClick={() => { weaponRef.current?.increaseDamage(5); setShowLevelUp(false); engineRef.current?.resume(); }} className="p-6 bg-linear-to-br from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-lg border-2 border-red-400 transition-all hover:scale-105"><div className="text-2xl mb-2"></div><h3 className="text-lg font-bold text-white mb-2">+Dano</h3><p className="text-sm text-red-200">Aumenta dano em 50%</p></button>
-              <button onClick={() => { const player = playerRef.current; if (player) { player.increaseMaxHealth(20); player.heal(20); } setShowLevelUp(false); engineRef.current?.resume(); }} className="p-6 bg-linear-to-br from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-lg border-2 border-green-400 transition-all hover:scale-105"><div className="text-2xl mb-2"></div><h3 className="text-lg font-bold text-white mb-2">+Vida Máxima</h3><p className="text-sm text-green-200">+20 HP máximo e cura 20 HP</p></button>
             </div>
           </div>
         </div>
@@ -411,6 +466,23 @@ export default function GamePage() {
           currentSlots={playerRef.current.getWeaponInventory().getSlots()}
           onReplace={handleWeaponReplace}
           onDiscard={handleWeaponDiscard}
+        />
+      )}
+
+      {/* Modal de seleção de arma inicial */}
+      {showStarterWeaponSelection && (
+        <StarterWeaponModal
+          weapons={upgradeSystemRef.current.generateStarterWeaponOptions()}
+          onSelectWeapon={handleStarterWeaponSelect}
+        />
+      )}
+
+      {/* Modal de seleção de upgrade ao subir de nível */}
+      {showUpgradeSelection && (
+        <UpgradeSelectionModal
+          upgrades={upgradeOptions}
+          onSelectUpgrade={handleUpgradeSelect}
+          playerLevel={playerLevel}
         />
       )}
 
