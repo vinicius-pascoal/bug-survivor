@@ -1,4 +1,6 @@
 import { GAME_CONFIG } from '../config/gameConfig';
+import { WeaponInventory } from '../systems/WeaponInventory';
+import { WeaponData } from '../types/WeaponTypes';
 
 export interface PlayerState {
   x: number;
@@ -15,6 +17,8 @@ export interface PlayerState {
 
 export class Player {
   private state: PlayerState;
+  private weaponInventory: WeaponInventory;
+  private levelUpCallbacks: Array<(level: number) => void> = [];
 
   constructor(x: number, y: number) {
     this.state = {
@@ -29,12 +33,16 @@ export class Player {
       xp: 0,
       xpToNextLevel: GAME_CONFIG.xp.levelUpBase,
     };
+    this.weaponInventory = new WeaponInventory();
   }
 
   update(deltaTime: number, input: { x: number; y: number }) {
     // Update position based on input
     this.state.x += input.x * this.state.speed * deltaTime;
     this.state.y += input.y * this.state.speed * deltaTime;
+
+    // Update weapon inventory
+    this.weaponInventory.update(deltaTime);
 
     // Keep player in bounds (will be clamped by systems)
   }
@@ -97,6 +105,17 @@ export class Player {
     this.state.xpToNextLevel = Math.floor(
       GAME_CONFIG.xp.levelUpBase * Math.pow(GAME_CONFIG.xp.levelUpMultiplier, this.state.level - 1)
     );
+
+    // Desbloqueia novo slot de arma a cada 5 níveis
+    if (this.state.level % 5 === 0 && this.state.level > 0) {
+      const result = this.weaponInventory.unlockSlot();
+      if (result.success) {
+        console.log(result.message);
+      }
+    }
+
+    // Chama callbacks de level up
+    this.levelUpCallbacks.forEach(callback => callback(this.state.level));
   }
 
   heal(amount: number) {
@@ -105,5 +124,31 @@ export class Player {
 
   increaseMaxHealth(amount: number) {
     this.state.maxHealth += amount;
+  }
+
+  // Métodos de inventário de armas
+  getWeaponInventory(): WeaponInventory {
+    return this.weaponInventory;
+  }
+
+  addWeapon(weaponData: WeaponData) {
+    return this.weaponInventory.addWeapon(weaponData);
+  }
+
+  replaceWeapon(slotIndex: number, weaponData: WeaponData) {
+    return this.weaponInventory.replaceWeapon(slotIndex, weaponData);
+  }
+
+  removeWeapon(slotIndex: number) {
+    return this.weaponInventory.removeWeapon(slotIndex);
+  }
+
+  hasWeaponSpace(): boolean {
+    return this.weaponInventory.hasSpace();
+  }
+
+  // Registra callback para quando subir de nível
+  onLevelUp(callback: (level: number) => void) {
+    this.levelUpCallbacks.push(callback);
   }
 }

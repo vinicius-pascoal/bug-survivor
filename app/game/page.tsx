@@ -6,9 +6,16 @@ import { GameEngine } from '@/game/core/GameEngine';
 import { Player } from '@/game/entities/Player';
 import { EnemySpawner } from '@/game/systems/EnemySpawner';
 import { XPDropSystem } from '@/game/systems/XPDropSystem';
+import { ChestSpawner } from '@/game/systems/ChestSpawner';
 import { DataDiskWeapon } from '@/game/weapons/DataDiskWeapon';
 import { GAME_CONFIG } from '@/game/config/gameConfig';
 import { formatTime } from '@/utils/helpers';
+import { WeaponData } from '@/game/types/WeaponTypes';
+import { WeaponSlot } from '@/game/systems/WeaponInventory';
+import { WeaponAcquiredModal } from '@/components/WeaponAcquiredModal';
+import { WeaponReplaceModal } from '@/components/WeaponReplaceModal';
+import { WeaponInventoryUI } from '@/components/WeaponInventoryUI';
+import { Chest } from '@/game/entities/Chest';
 
 export default function GamePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,6 +23,7 @@ export default function GamePage() {
   const playerRef = useRef<Player | null>(null);
   const enemySpawnerRef = useRef<EnemySpawner | null>(null);
   const xpDropSystemRef = useRef<XPDropSystem | null>(null);
+  const chestSpawnerRef = useRef<ChestSpawner | null>(null);
   const weaponRef = useRef<DataDiskWeapon | null>(null);
   const inputRef = useRef({ x: 0, y: 0 });
   const damageTimerRef = useRef(0);
@@ -26,12 +34,23 @@ export default function GamePage() {
   const [survivalTime, setSurvivalTime] = useState(0);
   const [killCount, setKillCount] = useState(0);
 
+  // Estados para sistema de armas
+  const [pendingWeapon, setPendingWeapon] = useState<WeaponData | null>(null);
+  const [showWeaponAcquired, setShowWeaponAcquired] = useState(false);
+  const [showWeaponReplace, setShowWeaponReplace] = useState(false);
+  const [weaponSlots, setWeaponSlots] = useState<WeaponSlot[]>([]);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const nearbyChestRef = useRef<Chest | null>(null);
+
   useEffect(() => {
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const engine = new GameEngine(canvas);
     engineRef.current = engine;
+
+    const chestSpawner = new ChestSpawner();
+    chestSpawnerRef.current = chestSpawner;
 
     const player = new Player(canvas.width / 2, canvas.height / 2);
     playerRef.current = player;
@@ -61,6 +80,22 @@ export default function GamePage() {
         } else {
           engine.pause();
           setIsPaused(true);
+        }
+      }
+      // Tecla E para abrir baú
+      if (e.key.toLowerCase() === 'e') {
+        if (nearbyChestRef.current && playerRef.current) {
+          const weaponData = nearbyChestRef.current.open();
+          setPendingWeapon(weaponData);
+
+          if (playerRef.current.hasWeaponSpace()) {
+            setShowWeaponAcquired(true);
+          } else {
+            setShowWeaponReplace(true);
+          }
+
+          engine.pause();
+          nearbyChestRef.current = null;
         }
       }
     };
@@ -100,6 +135,13 @@ export default function GamePage() {
       if (playerState.y < halfHeight) playerState.y = halfHeight;
       if (playerState.y > canvas.height - halfHeight) playerState.y = canvas.height - halfHeight;
 
+      // Atualiza chest spawner
+      chestSpawner.update(deltaTime, playerState.level, playerPos.x, playerPos.y);
+
+      // Verifica colisão com baús
+      const nearbyChest = chestSpawner.checkCollisions(playerPos.x, playerPos.y, playerState.width / 2);
+      nearbyChestRef.current = nearbyChest;
+
       weapon.update(deltaTime, playerPos.x, playerPos.y);
       enemySpawner.update(deltaTime, engine.getElapsedTime());
 
@@ -135,6 +177,8 @@ export default function GamePage() {
         const leveledUp = player.gainXP(collectedXP);
         if (leveledUp) {
           setShowLevelUp(true);
+          setPlayerLevel(playerState.level);
+          setWeaponSlots(player.getWeaponInventory().getSlots());
           engine.pause();
         }
       }
@@ -182,8 +226,20 @@ export default function GamePage() {
 
       player.render(ctx);
       weapon.render(ctx);
+      chestSpawner.render(ctx);
       enemySpawner.getEnemies().forEach(enemy => enemy.render(ctx));
       xpDropSystem.render(ctx);
+
+      // Desenha indicador de baú próximo
+      if (nearbyChestRef.current) {
+        const chestPos = nearbyChestRef.current.getPosition();
+        ctx.save();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Pressione E para abrir', chestPos.x, chestPos.y - 40);
+        ctx.restore();
+      }
 
       ctx.save();
       ctx.fillStyle = '#06b6d4';
@@ -226,12 +282,47 @@ export default function GamePage() {
     engine.start();
     setIsLoaded(true);
 
+    // Inicializa estados de UI
+    setPlayerLevel(player.getState().level);
+    setWeaponSlots(player.getWeaponInventory().getSlots());
+
     return () => {
       engine.stop();
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  // Funções para lidar com aquisição de armas
+  const handleWeaponAcquired = () => {
+    if (pendingWeapon && playerRef.current) {
+      const result = playerRef.current.addWeapon(pendingWeapon);
+      if (result.success) {
+        setWeaponSlots(playerRef.current.getWeaponInventory().getSlots());
+      }
+      setPendingWeapon(null);
+      setShowWeaponAcquired(false);
+      engineRef.current?.resume();
+    }
+  };
+
+  const handleWeaponReplace = (slotIndex: number) => {
+    if (pendingWeapon && playerRef.current) {
+      const result = playerRef.current.replaceWeapon(slotIndex, pendingWeapon);
+      if (result.success) {
+        setWeaponSlots(playerRef.current.getWeaponInventory().getSlots());
+      }
+      setPendingWeapon(null);
+      setShowWeaponReplace(false);
+      engineRef.current?.resume();
+    }
+  };
+
+  const handleWeaponDiscard = () => {
+    setPendingWeapon(null);
+    setShowWeaponReplace(false);
+    engineRef.current?.resume();
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-black flex items-center justify-center">
@@ -286,8 +377,31 @@ export default function GamePage() {
           <div className="text-cyan-400 text-2xl font-mono animate-pulse">&gt; CARREGANDO...</div>
         </div>
       )}
+
+      {/* UI de inventário de armas */}
+      {isLoaded && !isGameOver && <WeaponInventoryUI slots={weaponSlots} playerLevel={playerLevel} />}
+
+      {/* Modal de arma adquirida */}
+      {showWeaponAcquired && pendingWeapon && (
+        <WeaponAcquiredModal
+          weapon={pendingWeapon}
+          onConfirm={handleWeaponAcquired}
+        />
+      )}
+
+      {/* Modal de substituição de arma */}
+      {showWeaponReplace && pendingWeapon && playerRef.current && (
+        <WeaponReplaceModal
+          newWeapon={pendingWeapon}
+          currentSlots={playerRef.current.getWeaponInventory().getSlots()}
+          onReplace={handleWeaponReplace}
+          onDiscard={handleWeaponDiscard}
+        />
+      )}
+
       <div className="absolute bottom-4 left-4 text-cyan-400 font-mono text-sm">
         <p>&gt; WASD / Setas: Mover</p>
+        <p>&gt; E: Abrir Baú</p>
         <p>&gt; ESC: Pausar</p>
       </div>
     </div>
