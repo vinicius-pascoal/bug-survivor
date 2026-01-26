@@ -2,6 +2,9 @@ import { WeaponData, WeaponInstance } from '../types/WeaponTypes';
 import { StatusEffectManager, StatusEffectType } from '../systems/StatusEffectManager';
 import { ParticleSystem } from '../systems/ParticleSystem';
 
+// Re-exportar StatusEffectType para uso em outras armas
+export { StatusEffectType };
+
 export interface WeaponAttackResult {
   damage: number;
   hitEnemies: string[];
