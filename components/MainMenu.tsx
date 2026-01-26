@@ -38,22 +38,41 @@ export default function MainMenu() {
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4">
         {/* Logo/Title */}
-        <div className="mb-16 text-center flex flex-col items-center">
-          <div className="flex items-center gap-4 mb-4">
-            <Image
-              src="/tvheadman/a_tv_head_man_using_a_moleton_rotations_8dir.gif"
-              alt="TV Head Man"
-              width={80}
-              height={80}
-              className="object-contain"
-              unoptimized
-              style={{ imageRendering: 'pixelated' }}
+        <div className="mb-8 md:mb-16 text-center flex flex-col items-center w-full max-w-6xl">
+          {/* Title Background Container */}
+          <div className="relative mb-4 w-full">
+            {/* Background Image */}
+            <div
+              className="absolute bg-center bg-no-repeat hidden sm:block"
+              style={{
+                backgroundImage: "url('/hud/bg-titulo.png')",
+                backgroundSize: '75% 100%',
+                zIndex: -1,
+                left: '-60px',
+                right: '-60px',
+                top: '10px',
+                bottom: '-50px',
+              }}
             />
-            <h1 className="text-7xl font-bold tracking-wider text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-purple-500 to-magenta-500 animate-pulse drop-shadow-[0_0_30px_rgba(168,85,247,0.8)]">
-              BUG SURVIVOR
-            </h1>
+
+            {/* Title Content */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 px-4 sm:px-10 py-4 sm:py-6">
+              <Image
+                src="/tvheadman/a_tv_head_man_using_a_moleton_rotations_8dir.gif"
+                alt="TV Head Man"
+                width={100}
+                height={100}
+                className="object-contain w-16 h-16 sm:w-20 sm:h-20 md:w-[100px] md:h-[100px]"
+                unoptimized
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-wider text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-purple-500 to-magenta-500 animate-pulse drop-shadow-[0_0_30px_rgba(168,85,247,0.8)]">
+                BUG SURVIVOR
+              </h1>
+            </div>
           </div>
-          <p className="text-lg tracking-widest text-cyan-300 font-mono drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]">
+
+          <p className="text-sm sm:text-base md:text-lg tracking-widest text-cyan-300 font-mono drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] px-4">
             &gt; SURVIVE THE DIGITAL CHAOS_
           </p>
         </div>
