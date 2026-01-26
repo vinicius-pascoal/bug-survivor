@@ -1,6 +1,8 @@
 import { GAME_CONFIG } from '../config/gameConfig';
 import { WeaponInventory } from '../systems/WeaponInventory';
 import { WeaponData } from '../types/WeaponTypes';
+import { WeaponCombatSystem } from '../systems/WeaponCombatSystem';
+import { Enemy } from './Enemy';
 
 export interface PlayerState {
   x: number;
@@ -18,6 +20,7 @@ export interface PlayerState {
 export class Player {
   private state: PlayerState;
   private weaponInventory: WeaponInventory;
+  private combatSystem: WeaponCombatSystem;
   private levelUpCallbacks: Array<(level: number) => void> = [];
 
   constructor(x: number, y: number) {
@@ -34,9 +37,10 @@ export class Player {
       xpToNextLevel: GAME_CONFIG.xp.levelUpBase,
     };
     this.weaponInventory = new WeaponInventory();
+    this.combatSystem = new WeaponCombatSystem();
   }
 
-  update(deltaTime: number, input: { x: number; y: number }) {
+  update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[]) {
     // Update position based on input
     this.state.x += input.x * this.state.speed * deltaTime;
     this.state.y += input.y * this.state.speed * deltaTime;
@@ -44,10 +48,48 @@ export class Player {
     // Update weapon inventory
     this.weaponInventory.update(deltaTime);
 
+    // Sync combat system with inventory
+    const equippedWeapons = this.weaponInventory.getSlots()
+      .filter(slot => slot.weapon !== null)
+      .map(slot => slot.weapon!);
+    this.combatSystem.syncWithInventory(equippedWeapons);
+
+    // Convert enemies to the format expected by combat system
+    const enemyData = enemies.map(enemy => {
+      const state = enemy.getState();
+      return {
+        id: state.id,
+        x: state.x,
+        y: state.y,
+        width: state.width,
+        height: state.height,
+        active: state.active
+      };
+    });
+
+    // Update combat system (handles attacks, effects, particles)
+    const combatResults = this.combatSystem.update(deltaTime, this.state.x, this.state.y, enemyData);
+
+    // Apply damage to enemies
+    combatResults.totalDamage.forEach((damage: number, enemyId: string) => {
+      const enemy = enemies.find(e => e.getState().id === enemyId);
+      if (enemy) {
+        enemy.takeDamage(damage);
+      }
+    });
+
+    // Apply lifesteal healing
+    if (combatResults.totalLifesteal > 0) {
+      this.heal(combatResults.totalLifesteal);
+    }
+
     // Keep player in bounds (will be clamped by systems)
   }
 
   render(ctx: CanvasRenderingContext2D) {
+    // Render weapon effects first (behind player)
+    this.combatSystem.render(ctx, this.state.x, this.state.y);
+
     // Draw player (temporary visual - will be replaced with sprites)
     ctx.save();
 

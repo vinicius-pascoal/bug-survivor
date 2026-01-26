@@ -126,7 +126,12 @@ export default function GamePage() {
       updateInput();
       const playerState = player.getState();
       const playerPos = player.getPosition();
-      player.update(deltaTime, inputRef.current);
+
+      // Get enemies before player update
+      const enemies = enemySpawner.getEnemies();
+
+      // Update player with enemies for combat system
+      player.update(deltaTime, inputRef.current, enemies);
 
       const halfWidth = playerState.width / 2;
       const halfHeight = playerState.height / 2;
@@ -145,11 +150,21 @@ export default function GamePage() {
       weapon.update(deltaTime, playerPos.x, playerPos.y);
       enemySpawner.update(deltaTime, engine.getElapsedTime());
 
-      const enemies = enemySpawner.getEnemies();
       enemies.forEach(enemy => enemy.update(deltaTime, playerPos.x, playerPos.y));
 
+      // Check for dead enemies from weapon combat system and create XP drops
+      let weaponKills = 0;
+      enemies.forEach(enemy => {
+        const enemyState = enemy.getState();
+        if (!enemyState.active && enemyState.health <= 0) {
+          // Enemy just died, create XP drop
+          xpDropSystem.createDrop(enemyState.id, enemyState.x, enemyState.y, enemyState.xpValue);
+          weaponKills++;
+        }
+      });
+
       const projectiles = weapon.getProjectiles();
-      let kills = 0;
+      let kills = weaponKills;
       projectiles.forEach(projectile => {
         const projState = projectile.getState();
         if (!projState.active) return;
