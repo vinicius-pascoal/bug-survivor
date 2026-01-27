@@ -12,6 +12,7 @@ export class SpriteAnimationSystem {
   private frameTime: number = 0;
   private frameDelay: number = 0.1; // segundos por frame
   private isLoaded: boolean = false;
+  private lastDirection: Direction = 'south';
 
   constructor() {
     this.loadSprites();
@@ -90,7 +91,11 @@ export class SpriteAnimationSystem {
 
   update(deltaTime: number, input: { x: number; y: number }) {
     const isMoving = Math.abs(input.x) > 0.01 || Math.abs(input.y) > 0.01;
-    const direction = isMoving ? this.getDirection(input.x, input.y) : 'south';
+    const direction = isMoving ? this.getDirection(input.x, input.y) : this.lastDirection;
+
+    if (isMoving) {
+      this.lastDirection = direction;
+    }
 
     // Determinar animação (usando walking por padrão, pode adicionar lógica para running)
     let animationType = 'idle';
@@ -155,13 +160,7 @@ export class SpriteAnimationSystem {
   }
 
   getCurrentDirection(): Direction {
-    // Extrai a direção da animação atual
-    if (this.currentAnimation.includes('idle')) {
-      return 'south'; // direção padrão
-    }
-    const parts = this.currentAnimation.split('-');
-    // Remove o tipo de animação (walking/running) e pega a direção
-    return parts.slice(1).join('-') as Direction;
+    return this.lastDirection;
   }
 
   getDirectionAngle(direction?: Direction): number {
