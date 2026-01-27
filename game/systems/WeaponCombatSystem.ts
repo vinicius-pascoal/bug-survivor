@@ -237,6 +237,6 @@ export class WeaponCombatSystem {
 
   // Retorna array de armas ativas
   getActiveWeapons(): BaseWeapon[] {
-    return Array.from(this.activeWeapons.values());
+    return Array.from(this.activeWeapons.values()).map(entry => entry.weapon);
   }
 }
