@@ -24,6 +24,7 @@ import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, StatType } from '@/ga
 
 export default function GamePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const playerRef = useRef<Player | null>(null);
   const enemySpawnerRef = useRef<EnemySpawner | null>(null);
@@ -37,6 +38,7 @@ export default function GamePage() {
   const [isGameOver, setIsGameOver] = useState(false);
   const [survivalTime, setSurvivalTime] = useState(0);
   const [killCount, setKillCount] = useState(0);
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 1920, height: 1080 });
 
   // Estados para sistema de armas
   const [pendingWeapon, setPendingWeapon] = useState<WeaponData | null>(null);
@@ -54,6 +56,41 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!canvasRef.current) return;
+
+    // Calcular dimensões responsivas usando o máximo espaço disponível
+    const calculateDimensions = () => {
+      // Usar innerWidth e innerHeight do viewport
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      const aspectRatio = 16 / 9; // 1920 / 1080
+
+      // Tenta usar toda a largura disponível primeiro
+      let width = windowWidth;
+      let height = width / aspectRatio;
+
+      // Se exceder altura, ajusta pela altura
+      if (height > windowHeight) {
+        height = windowHeight;
+        width = height * aspectRatio;
+      }
+
+      // Garante que não fica maior que a tela
+      width = Math.min(width, windowWidth);
+      height = Math.min(height, windowHeight);
+
+      // Valores mínimos
+      width = Math.max(width, 512);
+      height = Math.max(height, 288);
+
+      return {
+        width: Math.floor(width),
+        height: Math.floor(height)
+      };
+    };
+
+    const dims = calculateDimensions();
+    setCanvasDimensions(dims);
 
     const canvas = canvasRef.current;
     const engine = new GameEngine(canvas);
@@ -372,10 +409,47 @@ export default function GamePage() {
     setPlayerLevel(player.getState().level);
     setWeaponSlots(player.getWeaponInventory().getSlots());
 
+    // Event listener para redimensionar
+    const handleResize = () => {
+      const newDims = (() => {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const aspectRatio = 16 / 9;
+
+        let width = windowWidth;
+        let height = width / aspectRatio;
+
+        if (height > windowHeight) {
+          height = windowHeight;
+          width = height * aspectRatio;
+        }
+
+        width = Math.min(width, windowWidth);
+        height = Math.min(height, windowHeight);
+
+        width = Math.max(width, 512);
+        height = Math.max(height, 288);
+
+        return {
+          width: Math.floor(width),
+          height: Math.floor(height)
+        };
+      })();
+
+      if (canvasRef.current) {
+        canvasRef.current.width = newDims.width;
+        canvasRef.current.height = newDims.height;
+        setCanvasDimensions(newDims);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     return () => {
       engine.stop();
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -459,36 +533,36 @@ export default function GamePage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-black flex items-center justify-center">
+    <div ref={containerRef} className="relative w-screen h-screen bg-black flex items-center justify-center overflow-hidden">
       <canvas
         ref={canvasRef}
-        width={GAME_CONFIG.canvas.width}
-        height={GAME_CONFIG.canvas.height}
-        className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] max-w-full h-auto"
+        width={canvasDimensions.width}
+        height={canvasDimensions.height}
+        className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] rounded-lg object-contain"
       />
       {isPaused && !showUpgradeSelection && !showStarterWeaponSelection && (
-        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-linear-to-br from-purple-900/50 to-cyan-900/50 p-8 rounded-lg border-2 border-cyan-400 shadow-[0_0_50px_rgba(6,182,212,0.8)]">
-            <h2 className="text-4xl font-bold text-cyan-400 mb-8 text-center font-mono">&gt; PAUSADO</h2>
-            <div className="flex flex-col gap-4">
-              <button onClick={() => { engineRef.current?.resume(); setIsPaused(false); }} className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded font-mono transition-all">&gt; CONTINUAR</button>
-              <Link href="/"><button className="w-full px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded font-mono transition-all">&gt; MENU PRINCIPAL</button></Link>
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-linear-to-br from-purple-900/50 to-cyan-900/50 p-6 sm:p-8 rounded-lg border-2 border-cyan-400 shadow-[0_0_50px_rgba(6,182,212,0.8)] w-full max-w-sm">
+            <h2 className="text-3xl sm:text-4xl font-bold text-cyan-400 mb-6 sm:mb-8 text-center font-mono">&gt; PAUSADO</h2>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <button onClick={() => { engineRef.current?.resume(); setIsPaused(false); }} className="px-4 sm:px-6 py-2 sm:py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded font-mono transition-all text-sm sm:text-base">&gt; CONTINUAR</button>
+              <Link href="/"><button className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded font-mono transition-all text-sm sm:text-base">&gt; MENU PRINCIPAL</button></Link>
             </div>
           </div>
         </div>
       )}
       {isGameOver && (
-        <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-50">
-          <div className="bg-linear-to-br from-red-900/80 to-purple-900/80 p-12 rounded-lg border-2 border-red-400 shadow-[0_0_60px_rgba(239,68,68,0.8)] max-w-md">
-            <h2 className="text-6xl font-bold text-red-400 mb-8 text-center font-mono">GAME OVER</h2>
-            <div className="text-cyan-300 font-mono space-y-3 mb-8 text-center">
-              <p className="text-2xl">&gt; Tempo: {formatTime(survivalTime)}</p>
-              <p className="text-2xl">&gt; Level: {playerRef.current?.getState().level || 1}</p>
-              <p className="text-2xl">&gt; Kills: {killCount}</p>
+        <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-linear-to-br from-red-900/80 to-purple-900/80 p-6 sm:p-12 rounded-lg border-2 border-red-400 shadow-[0_0_60px_rgba(239,68,68,0.8)] w-full max-w-md">
+            <h2 className="text-4xl sm:text-6xl font-bold text-red-400 mb-6 sm:mb-8 text-center font-mono">GAME OVER</h2>
+            <div className="text-cyan-300 font-mono space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-center">
+              <p className="text-lg sm:text-2xl">&gt; Tempo: {formatTime(survivalTime)}</p>
+              <p className="text-lg sm:text-2xl">&gt; Level: {playerRef.current?.getState().level || 1}</p>
+              <p className="text-lg sm:text-2xl">&gt; Kills: {killCount}</p>
             </div>
-            <div className="flex flex-col gap-4">
-              <button onClick={() => window.location.reload()} className="px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded font-mono transition-all">&gt; JOGAR NOVAMENTE</button>
-              <Link href="/"><button className="w-full px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded font-mono transition-all">&gt; MENU PRINCIPAL</button></Link>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <button onClick={() => window.location.reload()} className="px-4 sm:px-6 py-2 sm:py-3 bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded font-mono transition-all text-sm sm:text-base">&gt; JOGAR NOVAMENTE</button>
+              <Link href="/"><button className="w-full px-4 sm:px-6 py-2 sm:py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded font-mono transition-all text-sm sm:text-base">&gt; MENU PRINCIPAL</button></Link>
             </div>
           </div>
         </div>
@@ -537,8 +611,8 @@ export default function GamePage() {
         />
       )}
 
-      <div className="absolute bottom-4 left-4 text-cyan-400 font-mono text-sm">
-        <p>&gt; WASD / Setas: Mover</p>
+      <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 text-cyan-400 font-mono text-[10px] sm:text-xs z-30 leading-tight">
+        <p>&gt; WASD/↑↓←→: Mover</p>
         <p>&gt; E: Abrir Baú</p>
         <p>&gt; ESC: Pausar</p>
       </div>

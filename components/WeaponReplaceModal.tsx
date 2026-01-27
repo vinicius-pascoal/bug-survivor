@@ -38,36 +38,36 @@ export function WeaponReplaceModal({ newWeapon, currentSlots, onReplace, onDisca
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="relative max-w-4xl w-full mx-4 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border-2 border-gray-700 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="relative max-w-4xl w-full my-auto bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border-2 border-gray-700 shadow-2xl overflow-hidden">
         {/* Header */}
         <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${rarityBg[newWeapon.rarity]}`} />
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Título */}
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white mb-2">Inventário Cheio!</h2>
-            <p className="text-gray-400">Substitua uma arma existente ou descarte a nova arma</p>
+          <div className="text-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Inventário Cheio!</h2>
+            <p className="text-xs sm:text-sm text-gray-400">Substitua uma arma existente ou descarte a nova arma</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Nova arma */}
             <div className={`bg-gradient-to-br ${rarityBg[newWeapon.rarity]} p-0.5 rounded-xl`}>
-              <div className="bg-gray-900 rounded-xl p-4">
+              <div className="bg-gray-900 rounded-xl p-3 sm:p-4">
                 <p className="text-xs text-gray-400 mb-2 text-center">NOVA ARMA</p>
-                <div className="flex justify-center mb-3">
-                  <div className="relative w-24 h-24">
+                <div className="flex justify-center mb-2 sm:mb-3">
+                  <div className="relative w-16 sm:w-24 h-16 sm:h-24">
                     <Image
                       src={newWeapon.imagePath}
                       alt={newWeapon.name}
                       width={96}
                       height={96}
-                      className="object-contain"
+                      className="object-contain w-16 sm:w-24 h-16 sm:h-24"
                     />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-white text-center mb-1">{newWeapon.name}</h3>
-                <p className={`text-xs font-semibold text-center mb-3 bg-gradient-to-r ${rarityBg[newWeapon.rarity]} bg-clip-text text-transparent`}>
+                <h3 className="text-base sm:text-lg font-bold text-white text-center mb-1">{newWeapon.name}</h3>
+                <p className={`text-xs font-semibold text-center mb-2 sm:mb-3 bg-gradient-to-r ${rarityBg[newWeapon.rarity]} bg-clip-text text-transparent`}>
                   {rarityText[newWeapon.rarity]}
                 </p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
@@ -80,15 +80,15 @@ export function WeaponReplaceModal({ newWeapon, currentSlots, onReplace, onDisca
                     <p className="text-blue-400 font-bold">{newWeapon.stats.attackSpeed.toFixed(1)}</p>
                   </div>
                 </div>
-                <div className="mt-3 bg-gray-800/30 rounded p-2">
-                  <p className="text-xs font-semibold text-white mb-1">{newWeapon.ability.name}</p>
-                  <p className="text-xs text-gray-400">{newWeapon.ability.description}</p>
+                <div className="mt-2 sm:mt-3 bg-gray-800/30 rounded p-2">
+                  <p className="text-xs font-semibold text-white mb-1 line-clamp-1">{newWeapon.ability.name}</p>
+                  <p className="text-xs text-gray-400 line-clamp-2">{newWeapon.ability.description}</p>
                 </div>
               </div>
             </div>
 
             {/* Armas atuais */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <p className="text-xs text-gray-400 mb-2 text-center">SUAS ARMAS ATUAIS</p>
               {currentSlots
                 .filter(slot => slot.unlocked && slot.weapon)
@@ -98,28 +98,28 @@ export function WeaponReplaceModal({ newWeapon, currentSlots, onReplace, onDisca
                     <button
                       key={index}
                       onClick={() => onReplace(currentSlots.findIndex(s => s === slot))}
-                      className={`w-full bg-gray-800/50 hover:bg-gray-700/50 border-2 ${rarityColors[weapon.data.rarity]} rounded-lg p-3 transition-all hover:scale-102`}
+                      className={`w-full bg-gray-800/50 hover:bg-gray-700/50 border-2 ${rarityColors[weapon.data.rarity]} rounded-lg p-2 sm:p-3 transition-all hover:scale-102`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-16 h-16 flex-shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="relative w-12 sm:w-16 h-12 sm:h-16 flex-shrink-0">
                           <Image
                             src={weapon.data.imagePath}
                             alt={weapon.data.name}
                             width={64}
                             height={64}
-                            className="object-contain"
+                            className="object-contain w-12 sm:w-16 h-12 sm:h-16"
                           />
                         </div>
-                        <div className="flex-1 text-left">
-                          <h4 className="text-sm font-bold text-white">{weapon.data.name}</h4>
+                        <div className="flex-1 text-left min-w-0">
+                          <h4 className="text-xs sm:text-sm font-bold text-white truncate">{weapon.data.name}</h4>
                           <p className="text-xs text-gray-400 mb-1">Nível {weapon.level}</p>
-                          <div className="flex gap-2 text-xs">
+                          <div className="flex gap-1 sm:gap-2 text-xs">
                             <span className="text-red-400">⚔ {weapon.data.stats.damage}</span>
                             <span className="text-blue-400">⚡ {weapon.data.stats.attackSpeed.toFixed(1)}</span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400">
-                          Substituir →
+                        <div className="text-xs text-gray-400 flex-shrink-0">
+                          →
                         </div>
                       </div>
                     </button>
@@ -131,7 +131,7 @@ export function WeaponReplaceModal({ newWeapon, currentSlots, onReplace, onDisca
           {/* Botão de descartar */}
           <button
             onClick={onDiscard}
-            className="w-full py-3 rounded-xl font-bold text-white bg-gray-700 hover:bg-gray-600 transition-colors"
+            className="w-full py-2 sm:py-3 rounded-xl font-bold text-white text-sm sm:text-base bg-gray-700 hover:bg-gray-600 transition-colors"
           >
             Descartar Nova Arma
           </button>
