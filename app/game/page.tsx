@@ -12,6 +12,7 @@ import { GAME_CONFIG } from '@/game/config/gameConfig';
 import { formatTime } from '@/utils/helpers';
 import { WeaponData } from '@/game/types/WeaponTypes';
 import { WeaponSlot } from '@/game/systems/WeaponInventory';
+import { EnemyProjectile } from '@/game/types/EnemyTypes';
 import { WeaponAcquiredModal } from '@/components/WeaponAcquiredModal';
 import { WeaponReplaceModal } from '@/components/WeaponReplaceModal';
 import { WeaponInventoryUI } from '@/components/WeaponInventoryUI';
@@ -161,6 +162,11 @@ export default function GamePage() {
 
       enemies.forEach(enemy => enemy.update(deltaTime, playerPos.x, playerPos.y));
 
+      const enemyProjectiles: EnemyProjectile[] = [];
+      enemies.forEach(enemy => {
+        enemyProjectiles.push(...enemy.getProjectiles());
+      });
+
       // Check for dead enemies from weapon combat system and create XP drops
       let weaponKills = 0;
       enemies.forEach(enemy => {
@@ -235,6 +241,25 @@ export default function GamePage() {
           }
         });
       }
+
+      // Dano por projéteis inimigos (atingem instantaneamente quando colidem)
+      for (const projectile of enemyProjectiles) {
+        const dx = projectile.x - playerPos.x;
+        const dy = projectile.y - playerPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const playerRadius = playerState.width / 2;
+
+        if (distance <= projectile.radius + playerRadius) {
+          const died = player.takeDamage(projectile.damage);
+          projectile.life = 0; // remove projétil
+          if (died) {
+            engine.stop();
+            setIsGameOver(true);
+            setSurvivalTime(engine.getElapsedTime());
+            break;
+          }
+        }
+      }
     });
 
     engine.onRender((ctx) => {
@@ -308,6 +333,32 @@ export default function GamePage() {
       ctx.strokeRect(barX, healthBarY, barWidth, barHeight);
       ctx.fillStyle = '#fff';
       ctx.fillText(`HP: ${Math.ceil(playerState.health)}/${playerState.maxHealth}`, barX + 5, healthBarY + 15);
+
+      const boss = enemySpawner.getActiveBoss();
+      if (boss) {
+        const bossState = boss.getState();
+        const bossBarWidth = 600;
+        const bossBarHeight = 22;
+        const bossX = canvas.width / 2 - bossBarWidth / 2;
+        const bossY = 40;
+        const bossPercent = Math.max(0, bossState.health / bossState.maxHealth);
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(bossX, bossY, bossBarWidth, bossBarHeight);
+
+        ctx.fillStyle = bossState.bossBarColor || '#ef4444';
+        ctx.fillRect(bossX, bossY, bossBarWidth * bossPercent, bossBarHeight);
+
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bossX, bossY, bossBarWidth, bossBarHeight);
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '18px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${bossState.name} - ${Math.ceil(bossState.health)}/${bossState.maxHealth}`, canvas.width / 2, bossY + 16);
+        ctx.textAlign = 'left';
+      }
       ctx.restore();
     });
 

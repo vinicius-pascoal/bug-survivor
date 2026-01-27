@@ -19,6 +19,7 @@ export const GAME_CONFIG = {
     minSpeed: 50,
     maxSpeed: 150,
     baseSize: 24,
+    bossInterval: 300, // seconds between bosses
   },
 
   // Weapons
