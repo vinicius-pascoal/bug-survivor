@@ -73,10 +73,11 @@ export class Player {
     this.weaponInventory.update(deltaTime);
 
     // Sync combat system with inventory
-    const equippedWeapons = this.weaponInventory.getSlots()
-      .filter(slot => slot.weapon !== null)
-      .map(slot => slot.weapon!);
-    this.combatSystem.syncWithInventory(equippedWeapons);
+    const equippedSlots = this.weaponInventory.getSlots()
+      .map((slot, index) => ({ slot, index }))
+      .filter(({ slot }) => slot.unlocked && slot.weapon !== null)
+      .map(({ slot, index }) => ({ weapon: slot.weapon!, slotIndex: index }));
+    this.combatSystem.syncWithInventory(equippedSlots);
 
     // Convert enemies to the format expected by combat system
     const enemyData = enemies.map(enemy => {

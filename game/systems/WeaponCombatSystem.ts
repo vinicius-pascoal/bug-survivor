@@ -11,9 +11,10 @@ import {
 } from '../weapons/SpecificWeapons';
 
 export class WeaponCombatSystem {
-  private activeWeapons: Map<string, BaseWeapon> = new Map();
+  private activeWeapons: Map<string, { weapon: BaseWeapon; slotIndex: number }> = new Map();
   private statusEffectManager: StatusEffectManager;
   private particleSystem: ParticleSystem;
+  private slotAngleOffsets = [0, Math.PI / 3, -Math.PI / 3, (2 * Math.PI) / 3, -(2 * Math.PI) / 3, Math.PI];
 
   constructor() {
     this.statusEffectManager = new StatusEffectManager();
@@ -21,11 +22,11 @@ export class WeaponCombatSystem {
   }
 
   // Adiciona uma arma ao sistema de combate
-  addWeapon(weaponInstance: WeaponInstance): boolean {
+  addWeapon(weaponInstance: WeaponInstance, slotIndex: number): boolean {
     try {
       const weapon = this.createWeaponInstance(weaponInstance);
       if (weapon) {
-        this.activeWeapons.set(weaponInstance.data.id, weapon);
+        this.activeWeapons.set(weaponInstance.data.id, { weapon, slotIndex });
         return true;
       }
       return false;
@@ -142,8 +143,9 @@ export class WeaponCombatSystem {
     const activeEnemies = enemies.filter(e => e.active);
 
     // Atualiza cada arma
-    this.activeWeapons.forEach((weapon) => {
-      const result = weapon.update(deltaTime, playerX, playerY, activeEnemies, playerAngle);
+    this.activeWeapons.forEach(({ weapon, slotIndex }) => {
+      const weaponAngle = this.getSlotAngle(slotIndex, playerAngle);
+      const result = weapon.update(deltaTime, playerX, playerY, activeEnemies, weaponAngle);
 
       if (result) {
         // Acumula dano por inimigo
@@ -176,7 +178,7 @@ export class WeaponCombatSystem {
     this.particleSystem.render(ctx);
 
     // Renderiza cada arma
-    this.activeWeapons.forEach((weapon) => {
+    this.activeWeapons.forEach(({ weapon }) => {
       weapon.render(ctx, playerX, playerY);
     });
   }
@@ -189,9 +191,9 @@ export class WeaponCombatSystem {
   }
 
   // Sincroniza com o inventário do jogador
-  syncWithInventory(equippedWeapons: WeaponInstance[]) {
+  syncWithInventory(equippedSlots: Array<{ weapon: WeaponInstance; slotIndex: number }>) {
     // Remove armas que não estão mais equipadas
-    const equippedIds = new Set(equippedWeapons.map(w => w.data.id));
+    const equippedIds = new Set(equippedSlots.map(slot => slot.weapon.data.id));
     const toRemove: string[] = [];
 
     this.activeWeapons.forEach((_, weaponId) => {
@@ -202,10 +204,13 @@ export class WeaponCombatSystem {
 
     toRemove.forEach(id => this.removeWeapon(id as WeaponType));
 
-    // Adiciona novas armas
-    equippedWeapons.forEach(weaponInstance => {
-      if (!this.activeWeapons.has(weaponInstance.data.id)) {
-        this.addWeapon(weaponInstance);
+    // Adiciona novas armas e atualiza ângulos dos slots existentes
+    equippedSlots.forEach(({ weapon, slotIndex }) => {
+      const existing = this.activeWeapons.get(weapon.data.id);
+      if (existing) {
+        existing.slotIndex = slotIndex;
+      } else {
+        this.addWeapon(weapon, slotIndex);
       }
     });
   }
@@ -218,6 +223,11 @@ export class WeaponCombatSystem {
   // Retorna o gerenciador de efeitos de status
   getStatusEffectManager(): StatusEffectManager {
     return this.statusEffectManager;
+  }
+
+  private getSlotAngle(slotIndex: number, playerAngle: number): number {
+    const offset = this.slotAngleOffsets[slotIndex] ?? (2 * Math.PI * (slotIndex % this.slotAngleOffsets.length)) / this.slotAngleOffsets.length;
+    return playerAngle + offset;
   }
 
   // Retorna número de armas ativas

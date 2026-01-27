@@ -235,6 +235,17 @@ export default function GamePage() {
             }
           }
         });
+
+        // Destroy enemy projectiles when hit by player projectiles
+        enemyProjectiles.forEach(ep => {
+          if (ep.life <= 0) return;
+          const dx = projState.x - ep.x;
+          const dy = projState.y - ep.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < projState.radius + ep.radius) {
+            ep.life = 0;
+          }
+        });
       });
 
       if (kills > 0) setKillCount(prev => prev + kills);
