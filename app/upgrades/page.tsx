@@ -25,10 +25,12 @@ export default function UpgradesPage() {
     const counts: Record<string, { current: number; max: number }> = {};
     tree.getAllUpgrades().forEach((node) => {
       const state = tree.getUpgradeState(node.id);
-      counts[node.id] = {
-        current: state.currentLevel,
-        max: node.level,
-      };
+      if (state) {
+        counts[node.id] = {
+          current: state.currentLevel,
+          max: node.level,
+        };
+      }
     });
     setUpgradeCounts(counts);
   }, []);
@@ -144,10 +146,10 @@ export default function UpgradesPage() {
                         }}
                         disabled={!isAvailable || isCompleted}
                         className={`p-4 rounded border-2 transition-all font-mono text-left ${isCompleted
-                            ? 'bg-green-900/30 border-green-500 opacity-75 cursor-default'
-                            : isAvailable
-                              ? 'bg-purple-900/50 border-purple-500 hover:border-cyan-400 hover:bg-purple-900/70 cursor-pointer'
-                              : 'bg-gray-900/30 border-gray-600 opacity-50 cursor-not-allowed'
+                          ? 'bg-green-900/30 border-green-500 opacity-75 cursor-default'
+                          : isAvailable
+                            ? 'bg-purple-900/50 border-purple-500 hover:border-cyan-400 hover:bg-purple-900/70 cursor-pointer'
+                            : 'bg-gray-900/30 border-gray-600 opacity-50 cursor-not-allowed'
                           }`}
                       >
                         <div className="flex items-start justify-between gap-2">
