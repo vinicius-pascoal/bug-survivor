@@ -43,11 +43,29 @@ export class DataDiskWeapon {
 
   upgrade() {
     // Add more projectiles or increase damage
+    this.addProjectile();
+  }
+
+  addProjectile() {
+    // Adiciona um novo projétil
     this.count++;
     this.projectiles.push(new Projectile(generateId(), 0, 0, this.damage));
   }
 
   increaseDamage(amount: number) {
     this.damage += amount;
+    // Aumenta o dano de todos os projéteis existentes
+    this.projectiles.forEach(p => {
+      const state = p.getState();
+      state.damage += amount;
+    });
+  }
+
+  getCount(): number {
+    return this.count;
+  }
+
+  getDamage(): number {
+    return this.damage;
   }
 }

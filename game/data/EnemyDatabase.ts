@@ -30,7 +30,7 @@ export const ENEMY_DEFINITIONS: EnemyDefinition[] = [
     projectileSize: 3,
     preferredDistance: 260,
     range: 420,
-    weight: 1,
+    weight: 0.25,
   },
   {
     id: 'mob-elite-melee-virus',
@@ -61,7 +61,7 @@ export const ENEMY_DEFINITIONS: EnemyDefinition[] = [
     projectileSize: 3.5,
     preferredDistance: 300,
     range: 480,
-    weight: 1,
+    weight: 0.2,
   },
   {
     id: 'mob-elite-ranged-virus-2',
@@ -79,7 +79,7 @@ export const ENEMY_DEFINITIONS: EnemyDefinition[] = [
     projectileSize: 4,
     preferredDistance: 320,
     range: 520,
-    weight: 1,
+    weight: 0.15,
   },
   {
     id: 'boss-4arms',

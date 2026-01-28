@@ -552,6 +552,12 @@ export default function GamePage() {
         case StatType.AREA_OF_EFFECT:
           playerRef.current.increaseAreaOfEffect(statUpgrade.value);
           break;
+        case StatType.PROJECTILE_COUNT:
+          // Adiciona novo projétil ao DataDiskWeapon
+          if (weaponRef.current) {
+            weaponRef.current.addProjectile();
+          }
+          break;
       }
     }
 

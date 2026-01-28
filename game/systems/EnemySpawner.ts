@@ -13,6 +13,8 @@ export class EnemySpawner {
   private nextBossTime: number;
   private activeBoss: Enemy | null = null;
   private enemyPool: EnemyDefinition[];
+  private firstBossDefeated: boolean = false;
+  private bossesDefeated: number = 0;
 
   constructor(canvasWidth: number, canvasHeight: number, spawnRate: number = 1) {
     this.canvasWidth = canvasWidth;
@@ -43,8 +45,10 @@ export class EnemySpawner {
     // Clean up inactive enemies
     this.enemies = this.enemies.filter(enemy => enemy.getState().active);
 
-    // Clear boss reference when dead
+    // Clear boss reference when dead and track first boss defeat
     if (this.activeBoss && !this.activeBoss.getState().active) {
+      this.firstBossDefeated = true;
+      this.bossesDefeated++;
       this.activeBoss = null;
     }
   }
@@ -113,14 +117,26 @@ export class EnemySpawner {
   }
 
   private pickEnemyDefinition(): EnemyDefinition {
-    const pool = this.enemyPool;
-    const totalWeight = pool.reduce((acc, def) => acc + (def.weight || 1), 0);
+    // Filtra inimigos elite se o primeiro boss ainda não foi derrotado
+    let availableEnemies = this.enemyPool;
+    if (!this.firstBossDefeated) {
+      availableEnemies = this.enemyPool.filter(def => 
+        !def.id.includes('elite')
+      );
+    }
+
+    // Fallback para pool completo se não houver inimigos não-elite
+    if (availableEnemies.length === 0) {
+      availableEnemies = this.enemyPool;
+    }
+
+    const totalWeight = availableEnemies.reduce((acc, def) => acc + (def.weight || 1), 0);
     let roll = Math.random() * totalWeight;
-    for (const def of pool) {
+    for (const def of availableEnemies) {
       roll -= def.weight || 1;
       if (roll <= 0) return def;
     }
-    return pool[0];
+    return availableEnemies[0];
   }
 
   getEnemies(): Enemy[] {

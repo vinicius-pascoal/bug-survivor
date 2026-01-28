@@ -114,35 +114,37 @@ export default function MainMenu() {
             </button>
           </Link>
 
-          <button
-            onMouseEnter={() => setHoveredButton('upgrades')}
-            onMouseLeave={() => setHoveredButton(null)}
-            className="w-full relative group overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-linear-to-r from-magenta-500 via-purple-400 to-magenta-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
+          <Link href="/upgrades">
+            <button
+              onMouseEnter={() => setHoveredButton('upgrades')}
+              onMouseLeave={() => setHoveredButton(null)}
+              className="w-full relative group overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-linear-to-r from-magenta-500 via-purple-400 to-magenta-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 transition-opacity duration-300" />
 
-            <div className={`
-              relative px-8 py-5 text-xl font-bold tracking-wider
-              bg-linear-to-r from-magenta-600/90 to-purple-600/90
-              backdrop-blur-sm
-              text-white rounded-lg
-              transform transition-all duration-300 ease-out
-              ${hoveredButton === 'upgrades' ? 'scale-[1.02] -translate-y-0.5' : ''}
-              border border-magenta-400/50
-              font-mono
-              shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
-            `}>
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                <span className="text-magenta-300">&gt;</span>
-                <span className="tracking-widest">UPGRADES</span>
-                {hoveredButton === 'upgrades' && <span className="animate-pulse">_</span>}
-              </span>
-            </div>
+              <div className={`
+                relative px-8 py-5 text-xl font-bold tracking-wider
+                bg-linear-to-r from-magenta-600/90 to-purple-600/90
+                backdrop-blur-sm
+                text-white rounded-lg
+                transform transition-all duration-300 ease-out
+                ${hoveredButton === 'upgrades' ? 'scale-[1.02] -translate-y-0.5' : ''}
+                border border-magenta-400/50
+                font-mono
+                shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]
+              `}>
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <span className="text-magenta-300">&gt;</span>
+                  <span className="tracking-widest">UPGRADES</span>
+                  {hoveredButton === 'upgrades' && <span className="animate-pulse">_</span>}
+                </span>
+              </div>
 
-            {hoveredButton === 'upgrades' && (
-              <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
-            )}
-          </button>
+              {hoveredButton === 'upgrades' && (
+                <div className="absolute inset-0 bg-linear-to-b from-transparent via-white/10 to-transparent rounded-lg animate-scan pointer-events-none" />
+              )}
+            </button>
+          </Link>
 
           <button
             onMouseEnter={() => setHoveredButton('options')}
