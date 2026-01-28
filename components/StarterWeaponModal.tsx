@@ -29,23 +29,23 @@ export function StarterWeaponModal({ weapons, onSelectWeapon }: StarterWeaponMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="w-full max-w-7xl my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+      <div className="w-full max-w-[95vw] sm:max-w-6xl md:max-w-7xl my-auto">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8 animate-fade-in">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+        <div className="text-center mb-4 sm:mb-6 md:mb-8 animate-fade-in px-2">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1.5 sm:mb-2 md:mb-3 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
             Escolha Sua Arma Inicial
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-300 mb-1 sm:mb-2">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mb-1">
             Esta será sua primeira arma na batalha
           </p>
-          <p className="text-xs sm:text-sm text-gray-500">
+          <p className="text-[10px] sm:text-xs md:text-sm text-gray-500">
             Você poderá adquirir mais armas durante o jogo
           </p>
         </div>
 
         {/* Grid de armas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 px-2 sm:px-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5 px-1 sm:px-2 md:px-4">
           {weapons.map((weaponUpgrade, index) => {
             const weapon = weaponUpgrade.weaponData;
 
@@ -53,34 +53,34 @@ export function StarterWeaponModal({ weapons, onSelectWeapon }: StarterWeaponMod
               <button
                 key={index}
                 onClick={() => onSelectWeapon(weaponUpgrade)}
-                className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl border-2 border-gray-700 hover:border-cyan-400 transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden transform w-full"
+                className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl sm:rounded-2xl border-2 border-gray-700 hover:border-cyan-400 transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 hover:shadow-2xl overflow-hidden transform w-full"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {/* Brilho da raridade */}
-                <div className={`absolute top-0 left-0 right-0 h-2 bg-gradient-to-r ${rarityColors[weapon.rarity]}`} />
+                <div className={`absolute top-0 left-0 right-0 h-1 sm:h-2 bg-gradient-to-r ${rarityColors[weapon.rarity]}`} />
 
-                <div className="p-4 sm:p-6">
+                <div className="p-3 sm:p-4 md:p-5 lg:p-6">
                   {/* Imagem da arma */}
-                  <div className="mb-3 sm:mb-4 flex justify-center">
-                    <div className={`relative w-20 sm:w-32 h-20 sm:h-32 rounded-xl bg-gradient-to-br ${rarityColors[weapon.rarity]} p-1 group-hover:scale-110 transition-transform duration-300`}>
-                      <div className="w-full h-full bg-gray-900 rounded-lg flex items-center justify-center">
+                  <div className="mb-2 sm:mb-3 md:mb-4 flex justify-center">
+                    <div className={`relative w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg sm:rounded-xl bg-gradient-to-br ${rarityColors[weapon.rarity]} p-0.5 sm:p-1 group-hover:scale-110 transition-transform duration-300`}>
+                      <div className="w-full h-full bg-gray-900 rounded-md sm:rounded-lg flex items-center justify-center">
                         <Image
                           src={weapon.imagePath}
                           alt={weapon.name}
                           width={110}
                           height={110}
-                          className="object-contain w-16 sm:w-28 h-16 sm:h-28"
+                          className="object-contain w-12 h-12 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Nome e categoria */}
-                  <h3 className="text-lg sm:text-2xl font-bold text-white mb-1 text-center">{weapon.name}</h3>
-                  <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3 text-center">{categoryText[weapon.category]}</p>
+                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-0.5 sm:mb-1 text-center line-clamp-1">{weapon.name}</h3>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-400 mb-1.5 sm:mb-2 md:mb-3 text-center">{categoryText[weapon.category]}</p>
 
                   {/* Descrição */}
-                  <p className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4 text-center min-h-[40px] sm:min-h-[60px] line-clamp-3">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-300 mb-2 sm:mb-3 md:mb-4 text-center min-h-[36px] sm:min-h-[40px] md:min-h-[48px] lg:min-h-[60px] line-clamp-2 sm:line-clamp-3">
                     {weapon.description}
                   </p>
 
