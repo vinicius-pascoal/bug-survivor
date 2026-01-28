@@ -48,7 +48,7 @@ export class Player {
     this.spriteSystem = new SpriteAnimationSystem();
   }
 
-  update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[]) {
+  update(deltaTime: number, input: { x: number; y: number }, enemies: Enemy[], mouseAngle?: number) {
     // Store input for animation
     this.lastInput = input;
 
@@ -92,12 +92,17 @@ export class Player {
       };
     });
 
-    // Get player facing direction
-    const playerDirection = this.spriteSystem.getCurrentDirection();
-    const playerAngle = this.spriteSystem.getDirectionAngle(playerDirection);
+    // Use mouse angle if provided, otherwise use player facing direction
+    let weaponAngle: number;
+    if (mouseAngle !== undefined) {
+      weaponAngle = mouseAngle;
+    } else {
+      const playerDirection = this.spriteSystem.getCurrentDirection();
+      weaponAngle = this.spriteSystem.getDirectionAngle(playerDirection);
+    }
 
     // Update combat system (handles attacks, effects, particles)
-    const combatResults = this.combatSystem.update(deltaTime, this.state.x, this.state.y, enemyData, playerAngle);
+    const combatResults = this.combatSystem.update(deltaTime, this.state.x, this.state.y, enemyData, weaponAngle);
 
     // Apply damage to enemies
     combatResults.totalDamage.forEach((damage: number, enemyId: string) => {

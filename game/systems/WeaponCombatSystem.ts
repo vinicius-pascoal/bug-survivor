@@ -14,7 +14,9 @@ export class WeaponCombatSystem {
   private activeWeapons: Map<string, { weapon: BaseWeapon; slotIndex: number }> = new Map();
   private statusEffectManager: StatusEffectManager;
   private particleSystem: ParticleSystem;
-  private slotAngleOffsets = [0, Math.PI / 3, -Math.PI / 3, (2 * Math.PI) / 3, -(2 * Math.PI) / 3, Math.PI];
+  // Pequenos offsets para criar variação visual sem afetar muito o alvo
+  // Todos os slots batendo principalmente na direção do mouse
+  private slotAngleOffsets = [0, Math.PI / 12, -Math.PI / 12, Math.PI / 6, -Math.PI / 6, Math.PI / 8];
 
   constructor() {
     this.statusEffectManager = new StatusEffectManager();

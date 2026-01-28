@@ -33,6 +33,7 @@ export default function GamePage() {
   const weaponRef = useRef<DataDiskWeapon | null>(null);
   const inputRef = useRef({ x: 0, y: 0 });
   const damageTimerRef = useRef(0);
+  const mousePositionRef = useRef({ x: 0, y: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -151,8 +152,18 @@ export default function GamePage() {
       keysPressed.delete(e.key.toLowerCase());
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      mousePositionRef.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('mousemove', handleMouseMove);
 
     const updateInput = () => {
       let x = 0;
@@ -174,11 +185,16 @@ export default function GamePage() {
       const playerState = player.getState();
       const playerPos = player.getPosition();
 
+      // Calculate angle from player to mouse
+      const dx = mousePositionRef.current.x - playerPos.x;
+      const dy = mousePositionRef.current.y - playerPos.y;
+      const mouseAngle = Math.atan2(dy, dx);
+
       // Get enemies before player update
       const enemies = enemySpawner.getEnemies();
 
       // Update player with enemies for combat system
-      player.update(deltaTime, inputRef.current, enemies);
+      player.update(deltaTime, inputRef.current, enemies, mouseAngle);
 
       const halfWidth = playerState.width / 2;
       const halfHeight = playerState.height / 2;
