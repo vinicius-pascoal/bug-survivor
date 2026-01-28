@@ -43,77 +43,106 @@ export class UpgradeSystem {
   ];
 
   setPlayerLevel(level: number) {
+    console.log(`[UpgradeSystem] Nível do jogador atualizado para: ${level}`);
     this.playerLevel = level;
   }
 
   // Gera opções de upgrade baseado no nível do jogador
   generateUpgradeOptions(count: number = 3, hasWeaponSlot: boolean = true): Upgrade[] {
     const options: Upgrade[] = [];
-    const typesUsed = new Set<string>();
-    let attempts = 0;
-    const maxAttempts = count * 10; // Proteção contra loop infinito
+    const usedStats = new Set<string>();
 
-    while (options.length < count && attempts < maxAttempts) {
-      attempts++;
-      const upgradeType = this.getRandomUpgradeType(hasWeaponSlot);
+    // Gera exatamente 'count' upgrades
+    for (let i = 0; i < count; i++) {
       let upgrade: Upgrade | null = null;
+      let attempts = 0;
+      const maxAttempts = 50;
 
-      switch (upgradeType) {
-        case UpgradeType.WEAPON:
-          upgrade = this.generateWeaponUpgrade();
-          break;
-        case UpgradeType.STAT:
-          upgrade = this.generateStatUpgrade(typesUsed);
-          // Se não conseguiu gerar stat (todos já usados), limpa o set e tenta novamente
-          if (!upgrade) {
-            typesUsed.clear();
-            upgrade = this.generateStatUpgrade(typesUsed);
-          }
-          break;
-        case UpgradeType.AREA_POWER:
-          upgrade = this.generateRandomAreaPowerUpgrade();
-          // Se não conseguiu gerar poder de área (nível baixo), tenta stat
-          if (!upgrade) {
-            upgrade = this.generateStatUpgrade(typesUsed);
-            if (!upgrade) {
-              typesUsed.clear();
-              upgrade = this.generateStatUpgrade(typesUsed);
+      // Tenta gerar um upgrade válido
+      while (!upgrade && attempts < maxAttempts) {
+        attempts++;
+        const upgradeType = this.selectUpgradeType(hasWeaponSlot, i);
+
+        switch (upgradeType) {
+          case UpgradeType.WEAPON:
+            upgrade = this.generateWeaponUpgrade();
+            break;
+
+          case UpgradeType.STAT:
+            upgrade = this.generateStatUpgrade(usedStats);
+            // Se esgotou os stats, permite repetição
+            if (!upgrade && usedStats.size > 0) {
+              usedStats.clear();
+              upgrade = this.generateStatUpgrade(usedStats);
             }
-          }
-          break;
-      }
+            break;
 
-      if (upgrade) {
-        options.push(upgrade);
-        if (upgrade.type === UpgradeType.STAT) {
-          typesUsed.add((upgrade as StatUpgrade).statType);
-        } else if (upgrade.type === UpgradeType.AREA_POWER) {
-          typesUsed.add('area_power');
+          case UpgradeType.AREA_POWER:
+            upgrade = this.generateRandomAreaPowerUpgrade();
+            // Se não conseguiu gerar poder, tenta stat como fallback
+            if (!upgrade) {
+              upgrade = this.generateStatUpgrade(usedStats);
+              if (!upgrade && usedStats.size > 0) {
+                usedStats.clear();
+                upgrade = this.generateStatUpgrade(usedStats);
+              }
+            }
+            break;
         }
       }
-    }
 
-    // Garante que sempre retorna pelo menos o número solicitado
-    while (options.length < count) {
-      typesUsed.clear();
-      const statUpgrade = this.generateStatUpgrade(typesUsed);
-      if (statUpgrade) {
-        options.push(statUpgrade);
-        typesUsed.add(statUpgrade.statType);
-      } else {
-        // Se ainda assim falhar, adiciona um upgrade de vida padrão
-        options.push({
+      // Se ainda não conseguiu, força um upgrade de vida
+      if (!upgrade) {
+        upgrade = {
           type: UpgradeType.STAT,
           statType: StatType.MAX_HEALTH,
           name: '+20 Vida Máxima',
           description: 'Aumenta sua vida máxima permanentemente',
           value: 20,
           iconPath: `/icons/stat-${StatType.MAX_HEALTH}.png`,
-        });
+        };
+      }
+
+      options.push(upgrade);
+
+      // Rastreia stats usados para evitar duplicatas
+      if (upgrade.type === UpgradeType.STAT) {
+        usedStats.add((upgrade as StatUpgrade).statType);
       }
     }
 
+    console.log(`[UpgradeSystem] Geradas ${options.length} opções:`, options.map(o => `${o.type}: ${o.name}`));
     return options;
+  }
+
+  // Seleciona tipo de upgrade com base na posição e disponibilidade
+  private selectUpgradeType(hasWeaponSlot: boolean, position: number): UpgradeType {
+    const hasPowersAvailable = this.areaPowers.some(power => power.minLevel <= this.playerLevel);
+
+    console.log(`[UpgradeSystem] Selecionando tipo para posição ${position}. Nível: ${this.playerLevel}, Poderes disponíveis: ${hasPowersAvailable}, Slot arma: ${hasWeaponSlot}`);
+
+    // Primeira opção: tenta garantir diversidade
+    if (position === 0) {
+      // 40% stat, 30% arma (se disponível), 30% poder (se disponível)
+      const rand = Math.random();
+      if (rand < 0.4) {
+        console.log('[UpgradeSystem] Tipo selecionado: STAT');
+        return UpgradeType.STAT;
+      } else if (rand < 0.7 && hasWeaponSlot) {
+        console.log('[UpgradeSystem] Tipo selecionado: WEAPON');
+        return UpgradeType.WEAPON;
+      } else if (hasPowersAvailable) {
+        console.log('[UpgradeSystem] Tipo selecionado: AREA_POWER');
+        return UpgradeType.AREA_POWER;
+      }
+      console.log('[UpgradeSystem] Tipo selecionado (fallback): STAT');
+      return UpgradeType.STAT;
+    }
+
+    // Segunda e terceira opções: mais aleatório
+    const result = this.getRandomUpgradeType(hasWeaponSlot);
+    console.log(`[UpgradeSystem] Tipo selecionado: ${result}`);
+    return result;
   }
 
   // Gera opções de armas iniciais
@@ -131,20 +160,32 @@ export class UpgradeSystem {
   }
 
   private getRandomUpgradeType(hasWeaponSlot: boolean): UpgradeType {
-    // Se não tem slot de arma disponível, só oferece stat upgrades e area powers
-    if (!hasWeaponSlot) {
-      const rand = Math.random();
-      return rand < 0.5 ? UpgradeType.STAT : UpgradeType.AREA_POWER;
-    }
+    // Verifica se há poderes de área disponíveis para o nível
+    const hasPowersAvailable = this.areaPowers.some(power => power.minLevel <= this.playerLevel);
 
-    // 30% chance de arma, 50% de stat, 20% de poder de área
-    const rand = Math.random();
-    if (rand < 0.3) {
-      return UpgradeType.WEAPON;
-    } else if (rand < 0.8) {
+    if (!hasWeaponSlot) {
+      // Sem slot de arma: 60% stat, 40% area power
+      if (hasPowersAvailable) {
+        const rand = Math.random();
+        return rand < 0.6 ? UpgradeType.STAT : UpgradeType.AREA_POWER;
+      }
       return UpgradeType.STAT;
     }
-    return UpgradeType.AREA_POWER;
+
+    if (hasPowersAvailable) {
+      // Com arma e poderes: 35% arma, 35% stat, 30% poder de área
+      const rand = Math.random();
+      if (rand < 0.35) {
+        return UpgradeType.WEAPON;
+      } else if (rand < 0.7) {
+        return UpgradeType.STAT;
+      }
+      return UpgradeType.AREA_POWER;
+    } else {
+      // Com arma mas sem poderes: 40% arma, 60% stat
+      const rand = Math.random();
+      return rand < 0.4 ? UpgradeType.WEAPON : UpgradeType.STAT;
+    }
   }
 
   private generateWeaponUpgrade(): WeaponUpgrade | null {
@@ -237,11 +278,16 @@ export class UpgradeSystem {
   private generateRandomAreaPowerUpgrade(): AreaPowerUpgrade | null {
     const eligiblePowers = this.areaPowers.filter(power => power.minLevel <= this.playerLevel);
 
+    console.log(`[UpgradeSystem] Gerando poder de área. Nível: ${this.playerLevel}, Poderes disponíveis:`, eligiblePowers.length);
+
     if (eligiblePowers.length === 0) {
+      console.log('[UpgradeSystem] Nenhum poder de área disponível para este nível');
       return null;
     }
 
     const randomPower = eligiblePowers[Math.floor(Math.random() * eligiblePowers.length)];
+
+    console.log(`[UpgradeSystem] Poder de área selecionado: ${randomPower.name} (${randomPower.id})`);
 
     return {
       type: UpgradeType.AREA_POWER,

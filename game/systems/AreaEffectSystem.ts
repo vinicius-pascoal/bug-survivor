@@ -1,14 +1,22 @@
 import { AreaEffect, AreaEffectConfig, AreaEffectType } from '../types/AreaEffectTypes';
 import { generateId } from '@/utils/helpers';
 
+interface AnimatedAreaEffect extends AreaEffect {
+  effectType: AreaEffectType;
+  rotation?: number;
+  scale?: number;
+}
+
 export class AreaEffectSystem {
-  private activeEffects: AreaEffect[] = [];
+  private activeEffects: AnimatedAreaEffect[] = [];
   private cooldowns: Map<string, number> = new Map();
   private configs: Map<string, AreaEffectConfig> = new Map();
   private frameCache: Map<string, HTMLImageElement[]> = new Map();
+  private isLoadingFrames: Map<string, boolean> = new Map();
 
   constructor() {
     this.initializeConfigs();
+    this.preloadAllAnimations();
   }
 
   private initializeConfigs() {
@@ -26,7 +34,7 @@ export class AreaEffectSystem {
       prerequisites: [],
       animationPath: '/efeitos/tempestade/raio_var_1',
       frameCount: 5,
-      frameDuration: 0.08,
+      frameDuration: 0.1,
     });
 
     // Fogo
@@ -42,8 +50,8 @@ export class AreaEffectSystem {
       cost: 3,
       prerequisites: ['lightning'],
       animationPath: '/efeitos/fire',
-      frameCount: 5,
-      frameDuration: 0.08,
+      frameCount: 6,
+      frameDuration: 0.1,
     });
 
     // Explosão Atômica
@@ -59,8 +67,8 @@ export class AreaEffectSystem {
       cost: 4,
       prerequisites: ['lightning', 'fire'],
       animationPath: '/efeitos/Explosion_atomic',
-      frameCount: 5,
-      frameDuration: 0.1,
+      frameCount: 10,
+      frameDuration: 0.08,
     });
 
     // Tóxico
@@ -76,7 +84,7 @@ export class AreaEffectSystem {
       cost: 3,
       prerequisites: ['lightning'],
       animationPath: '/efeitos/Explosion_toxic',
-      frameCount: 5,
+      frameCount: 10,
       frameDuration: 0.08,
     });
 
@@ -93,7 +101,7 @@ export class AreaEffectSystem {
       cost: 3,
       prerequisites: ['lightning'],
       animationPath: '/efeitos/Explosion_eletric',
-      frameCount: 5,
+      frameCount: 10,
       frameDuration: 0.08,
     });
 
@@ -110,7 +118,7 @@ export class AreaEffectSystem {
       cost: 4,
       prerequisites: ['fire', 'toxic'],
       animationPath: '/efeitos/Explosion_wather_and_fire',
-      frameCount: 5,
+      frameCount: 10,
       frameDuration: 0.08,
     });
 
@@ -127,8 +135,78 @@ export class AreaEffectSystem {
       cost: 2,
       prerequisites: [],
       animationPath: '/efeitos/Explosion_defaut',
-      frameCount: 5,
+      frameCount: 10,
       frameDuration: 0.08,
+    });
+  }
+
+  private async preloadAllAnimations() {
+    for (const [type, config] of this.configs.entries()) {
+      await this.loadAnimationFrames(type as AreaEffectType, config);
+    }
+  }
+
+  private async loadAnimationFrames(effectType: AreaEffectType, config: AreaEffectConfig): Promise<void> {
+    if (this.frameCache.has(effectType) || this.isLoadingFrames.get(effectType)) {
+      return;
+    }
+
+    this.isLoadingFrames.set(effectType, true);
+    const frames: HTMLImageElement[] = [];
+
+    try {
+      // Padrões especiais para raios
+      if (effectType === 'lightning') {
+        // Escolher variante aleatória de raio
+        const variant = Math.floor(Math.random() * 3) + 1; // 1, 2 ou 3
+        const path = `/efeitos/tempestade/raio_var_${variant}`;
+
+        if (variant === 1) {
+          // raio_var_1: Explosion_1.png até Explosion_5.png
+          for (let i = 1; i <= 5; i++) {
+            const img = await this.loadImage(`${path}/Explosion_${i}.png`);
+            if (img) frames.push(img);
+          }
+        } else if (variant === 2) {
+          // raio_var_2: Explosion_1_1.png, Explosion_1_2.png, Explosion_1_3.png
+          for (let i = 1; i <= 3; i++) {
+            const img = await this.loadImage(`${path}/Explosion_1_${i}.png`);
+            if (img) frames.push(img);
+          }
+        } else {
+          // raio_var_3: Explosion_2_1.png até Explosion_2_6.png
+          for (let i = 1; i <= 6; i++) {
+            const img = await this.loadImage(`${path}/Explosion_2_${i}.png`);
+            if (img) frames.push(img);
+          }
+        }
+      } else {
+        // Padrão normal para outros efeitos
+        for (let i = 1; i <= config.frameCount; i++) {
+          const img = await this.loadImage(`${config.animationPath}/Explosion_${i}.png`);
+          if (img) frames.push(img);
+        }
+      }
+
+      if (frames.length > 0) {
+        this.frameCache.set(effectType, frames);
+      }
+    } catch (error) {
+      console.error(`Error loading animation for ${effectType}:`, error);
+    } finally {
+      this.isLoadingFrames.set(effectType, false);
+    }
+  }
+
+  private async loadImage(path: string): Promise<HTMLImageElement | null> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        console.warn(`Failed to load frame: ${path}`);
+        resolve(null);
+      };
+      img.src = path;
     });
   }
 
@@ -158,7 +236,12 @@ export class AreaEffectSystem {
 
     this.cooldowns.set(effectType, now);
 
-    const effect: AreaEffect = {
+    // Carregar animação se ainda não estiver carregada
+    if (!this.frameCache.has(effectType)) {
+      this.loadAnimationFrames(effectType, config);
+    }
+
+    const effect: AnimatedAreaEffect = {
       id: generateId(),
       x,
       y,
@@ -169,6 +252,9 @@ export class AreaEffectSystem {
       frameDuration: config.frameDuration,
       elapsedTime: 0,
       active: true,
+      effectType,
+      rotation: Math.random() * Math.PI * 2, // Rotação aleatória
+      scale: 0.8 + Math.random() * 0.4, // Escala entre 0.8 e 1.2
     };
 
     this.activeEffects.push(effect);
@@ -203,14 +289,89 @@ export class AreaEffectSystem {
     this.activeEffects.forEach(effect => {
       if (!effect.active) return;
 
-      ctx.save();
-      ctx.globalAlpha = 0.8;
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-      ctx.beginPath();
-      ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      const frames = this.frameCache.get(effect.effectType);
+
+      if (frames && frames.length > 0) {
+        // Renderizar sprite animado
+        const frameIndex = Math.min(effect.currentFrame, frames.length - 1);
+        const currentImage = frames[frameIndex];
+
+        if (currentImage && currentImage.complete && currentImage.naturalWidth > 0) {
+          ctx.save();
+
+          // Calcular tamanho baseado no raio do efeito e escala
+          const baseSize = effect.radius * 3;
+          const size = baseSize * (effect.scale || 1);
+
+          // Adicionar glow effect baseado no tipo
+          const glowColors: Record<AreaEffectType, string> = {
+            lightning: '#4488ff',
+            fire: '#ff6600',
+            atomic: '#00ff00',
+            toxic: '#88ff00',
+            electric: '#ffff00',
+            'water-fire': '#00ccff',
+            default: '#ff8800',
+          };
+
+          const glowColor = glowColors[effect.effectType] || glowColors.default;
+
+          // Aplicar glow
+          ctx.shadowColor = glowColor;
+          ctx.shadowBlur = 20;
+
+          // Centralizar a imagem no ponto de efeito
+          ctx.translate(effect.x, effect.y);
+
+          // Aplicar rotação se definida
+          if (effect.rotation) {
+            ctx.rotate(effect.rotation);
+          }
+
+          // Fade out nos últimos frames
+          const fadeProgress = effect.currentFrame / effect.totalFrames;
+          ctx.globalAlpha = fadeProgress < 0.7 ? 1.0 : 1.0 - ((fadeProgress - 0.7) / 0.3) * 0.5;
+
+          // Desenhar a sprite
+          ctx.drawImage(
+            currentImage,
+            -size / 2,
+            -size / 2,
+            size,
+            size
+          );
+
+          ctx.restore();
+        } else {
+          // Fallback: círculo colorido se a imagem não carregar
+          this.renderFallbackEffect(ctx, effect);
+        }
+      } else {
+        // Fallback: círculo colorido se não houver frames
+        this.renderFallbackEffect(ctx, effect);
+      }
     });
+  }
+
+  private renderFallbackEffect(ctx: CanvasRenderingContext2D, effect: AnimatedAreaEffect) {
+    // Definir cores por tipo de efeito
+    const colors: Record<AreaEffectType, string> = {
+      lightning: 'rgba(100, 150, 255, 0.5)',
+      fire: 'rgba(255, 100, 0, 0.5)',
+      atomic: 'rgba(0, 255, 0, 0.5)',
+      toxic: 'rgba(150, 255, 0, 0.5)',
+      electric: 'rgba(255, 255, 0, 0.5)',
+      'water-fire': 'rgba(0, 200, 255, 0.5)',
+      default: 'rgba(255, 0, 0, 0.3)',
+    };
+
+    ctx.save();
+    ctx.globalAlpha = 0.7 - (effect.currentFrame / effect.totalFrames) * 0.4;
+    ctx.fillStyle = colors[effect.effectType] || colors.default;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   getActiveEffects(): AreaEffect[] {
@@ -242,9 +403,13 @@ export class AreaEffectSystem {
   }
 
   activateEffect(effectType: AreaEffectType): void {
+    console.log('[AreaEffectSystem] Tentando ativar efeito:', effectType);
     const config = this.configs.get(effectType);
     if (config) {
       config.currentLevel = 1; // Ativa o efeito
+      console.log('[AreaEffectSystem] Efeito ativado:', effectType, 'Nível:', config.currentLevel);
+    } else {
+      console.error('[AreaEffectSystem] Config não encontrado para:', effectType);
     }
   }
 

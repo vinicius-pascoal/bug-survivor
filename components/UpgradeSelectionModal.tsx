@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade } from '@/game/types/UpgradeTypes';
+import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, AreaPowerUpgrade } from '@/game/types/UpgradeTypes';
 import { WeaponRarity } from '@/game/types/WeaponTypes';
 import Image from 'next/image';
 
@@ -158,6 +158,76 @@ export function UpgradeSelectionModal({
 
             {/* Hover effect */}
             <div className="absolute inset-0 bg-green-500/0 group-hover:bg-green-500/5 transition-colors duration-300 pointer-events-none" />
+          </div>
+        </button>
+      );
+    }
+
+    // AREA_POWER Upgrade Card
+    if (upgrade.type === UpgradeType.AREA_POWER) {
+      const areaPowerUpgrade = upgrade as AreaPowerUpgrade;
+
+      const powerConfig = {
+        lightning: { icon: '⚡', color: '#44aaff', bgGradient: 'from-blue-400 to-cyan-600', name: 'Tempestade de Raios' },
+        fire: { icon: '🔥', color: '#ff6600', bgGradient: 'from-orange-400 to-red-600', name: 'Inferno Flamejante' },
+        atomic: { icon: '☢️', color: '#00ff00', bgGradient: 'from-green-400 to-lime-600', name: 'Explosão Atômica' },
+        toxic: { icon: '☣️', color: '#88ff00', bgGradient: 'from-lime-400 to-green-600', name: 'Nuvem Tóxica' },
+        electric: { icon: '⚡', color: '#ffff00', bgGradient: 'from-yellow-400 to-amber-600', name: 'Campo Elétrico' },
+        'water-fire': { icon: '🌊', color: '#00ccff', bgGradient: 'from-cyan-400 to-blue-600', name: 'Vapor Escaldante' },
+        default: { icon: '💥', color: '#ff8800', bgGradient: 'from-orange-400 to-amber-600', name: 'Poder de Área' }
+      };
+
+      const config = powerConfig[areaPowerUpgrade.powerType as keyof typeof powerConfig] || powerConfig.default;
+
+      return (
+        <button
+          key={index}
+          onClick={() => onSelectUpgrade(upgrade)}
+          className="group relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl border-2 border-gray-700 hover:border-orange-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden w-full"
+        >
+          <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${config.bgGradient}`} />
+
+          <div className="p-4 sm:p-6">
+            {/* Badge de tipo */}
+            <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+              <span className="text-xs font-bold text-orange-400 bg-orange-950 px-2 py-1 rounded">
+                PODER
+              </span>
+            </div>
+
+            {/* Ícone */}
+            <div className="mb-3 sm:mb-4 flex justify-center">
+              <div className="w-16 sm:w-24 h-16 sm:h-24 rounded-lg bg-gradient-to-br from-orange-400/20 to-amber-600/20 flex items-center justify-center">
+                <div className="text-3xl sm:text-5xl">
+                  {config.icon}
+                </div>
+              </div>
+            </div>
+
+            {/* Nome */}
+            <h3 className="text-base sm:text-xl font-bold text-white mb-2 sm:mb-3">{config.name}</h3>
+
+            {/* Descrição */}
+            <p className="text-xs sm:text-sm text-gray-300 mb-3 sm:mb-4 min-h-[40px] sm:min-h-[60px] line-clamp-3">{areaPowerUpgrade.description}</p>
+
+            {/* Estatísticas do poder */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-2">
+                <p className="text-xs text-gray-400 mb-1">Dano</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-400">
+                  {areaPowerUpgrade.baseDamage}
+                </p>
+              </div>
+              <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-2">
+                <p className="text-xs text-gray-400 mb-1">Cooldown</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-400">
+                  {areaPowerUpgrade.cooldown}s
+                </p>
+              </div>
+            </div>
+
+            {/* Hover effect */}
+            <div className="absolute inset-0 bg-orange-500/0 group-hover:bg-orange-500/5 transition-colors duration-300 pointer-events-none" />
           </div>
         </button>
       );

@@ -608,8 +608,12 @@ export default function GamePage() {
       }
     } else if (upgrade.type === UpgradeType.AREA_POWER) {
       const areaPowerUpgrade = upgrade as AreaPowerUpgrade;
+      console.log('[Game] Ativando poder de área:', areaPowerUpgrade.powerType);
       if (areaEffectSystemRef.current) {
         areaEffectSystemRef.current.activateEffect(areaPowerUpgrade.powerType);
+        console.log('[Game] Poder ativado com sucesso');
+      } else {
+        console.error('[Game] AreaEffectSystem não está disponível');
       }
     }
 
