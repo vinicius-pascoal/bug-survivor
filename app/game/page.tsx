@@ -7,6 +7,7 @@ import { Player } from '@/game/entities/Player';
 import { EnemySpawner } from '@/game/systems/EnemySpawner';
 import { XPDropSystem } from '@/game/systems/XPDropSystem';
 import { ChestSpawner } from '@/game/systems/ChestSpawner';
+import { AreaEffectSystem } from '@/game/systems/AreaEffectSystem';
 import { DataDiskWeapon } from '@/game/weapons/DataDiskWeapon';
 import { GAME_CONFIG } from '@/game/config/gameConfig';
 import { formatTime } from '@/utils/helpers';
@@ -20,7 +21,7 @@ import { UpgradeSelectionModal } from '@/components/UpgradeSelectionModal';
 import { StarterWeaponModal } from '@/components/StarterWeaponModal';
 import { Chest } from '@/game/entities/Chest';
 import { UpgradeSystem } from '@/game/upgrades/UpgradeSystem';
-import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, StatType } from '@/game/types/UpgradeTypes';
+import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, StatType, AreaPowerUpgrade } from '@/game/types/UpgradeTypes';
 
 export default function GamePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -31,6 +32,7 @@ export default function GamePage() {
   const xpDropSystemRef = useRef<XPDropSystem | null>(null);
   const chestSpawnerRef = useRef<ChestSpawner | null>(null);
   const weaponRef = useRef<DataDiskWeapon | null>(null);
+  const areaEffectSystemRef = useRef<AreaEffectSystem | null>(null);
   const inputRef = useRef({ x: 0, y: 0 });
   const damageTimerRef = useRef(0);
   const mousePositionRef = useRef({ x: 0, y: 0 });
@@ -116,6 +118,9 @@ export default function GamePage() {
       GAME_CONFIG.weapons.dataDisk.speed
     );
     weaponRef.current = weapon;
+
+    const areaEffectSystem = new AreaEffectSystem();
+    areaEffectSystemRef.current = areaEffectSystem;
 
     const keysPressed = new Set<string>();
 
@@ -212,6 +217,16 @@ export default function GamePage() {
 
       weapon.update(deltaTime, playerPos.x, playerPos.y);
       enemySpawner.update(deltaTime, engine.getElapsedTime());
+      areaEffectSystem.update(deltaTime);
+
+      // Trigger area effects automaticamente baseado na frequência
+      const activeEffects = areaEffectSystem.getActiveEffectTypes();
+      activeEffects.forEach(effectType => {
+        const cooldown = areaEffectSystem.getEffectsCooldown(effectType);
+        if (cooldown === 0) {
+          areaEffectSystem.triggerRandomEffect(effectType, canvas.width, canvas.height, 1);
+        }
+      });
 
       enemies.forEach(enemy => enemy.update(deltaTime, playerPos.x, playerPos.y));
 
@@ -266,6 +281,27 @@ export default function GamePage() {
 
       if (kills > 0) setKillCount(prev => prev + kills);
 
+      // Aplicar dano dos efeitos de área aos inimigos
+      const areaEffects = areaEffectSystem.getActiveEffects();
+      areaEffects.forEach(effect => {
+        if (!effect.active) return;
+        enemies.forEach(enemy => {
+          const enemyState = enemy.getState();
+          if (!enemyState.active) return;
+          const distance = Math.sqrt(
+            Math.pow(effect.x - enemyState.x, 2) +
+            Math.pow(effect.y - enemyState.y, 2)
+          );
+          if (distance < effect.radius + enemyState.width / 2) {
+            const died = enemy.takeDamage(effect.damage);
+            if (died) {
+              xpDropSystem.createDrop(enemyState.id, enemyState.x, enemyState.y, enemyState.xpValue);
+              setKillCount(prev => prev + 1);
+            }
+          }
+        });
+      });
+
       const collectedXP = xpDropSystem.update(deltaTime, playerPos.x, playerPos.y);
       if (collectedXP > 0) {
         const leveledUp = player.gainXP(collectedXP);
@@ -278,6 +314,7 @@ export default function GamePage() {
           upgradeSystemRef.current.setPlayerLevel(newLevel);
           const hasSpace = player.hasWeaponSpace();
           const options = upgradeSystemRef.current.generateUpgradeOptions(3, hasSpace);
+          console.log('Opções de upgrade geradas:', options.length, options);
           setUpgradeOptions(options);
           setShowUpgradeSelection(true);
 
@@ -347,6 +384,7 @@ export default function GamePage() {
 
       player.render(ctx);
       weapon.render(ctx);
+      areaEffectSystem.render(ctx);
       chestSpawner.render(ctx);
       enemySpawner.getEnemies().forEach(enemy => enemy.render(ctx));
       xpDropSystem.render(ctx);
@@ -567,6 +605,11 @@ export default function GamePage() {
             }
           }
           break;
+      }
+    } else if (upgrade.type === UpgradeType.AREA_POWER) {
+      const areaPowerUpgrade = upgrade as AreaPowerUpgrade;
+      if (areaEffectSystemRef.current) {
+        areaEffectSystemRef.current.activateEffect(areaPowerUpgrade.powerType);
       }
     }
 

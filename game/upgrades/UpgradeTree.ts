@@ -189,6 +189,100 @@ export class UpgradeTree {
       column: 0,
       row: 3,
     });
+
+    // ===== Ramo de Poderes de Área =====
+    // Tier 1 - Poderes básicos
+    this.addNode({
+      id: 'power-default',
+      name: 'Explosão Padrão',
+      description: 'Explosões básicas caem no mapa',
+      value: 35,
+      level: 3,
+      currentLevel: 0,
+      cost: 2,
+      prerequisites: [],
+      column: 5,
+      row: 0,
+    });
+
+    this.addNode({
+      id: 'power-lightning',
+      name: 'Tempestade de Raios',
+      description: 'Raios caem aleatoriamente',
+      value: 50,
+      level: 3,
+      currentLevel: 0,
+      cost: 3,
+      prerequisites: ['power-default'],
+      column: 6,
+      row: 0,
+    });
+
+    this.addNode({
+      id: 'power-toxic',
+      name: 'Gás Tóxico',
+      description: 'Nuvem tóxica explode no mapa',
+      value: 40,
+      level: 2,
+      currentLevel: 0,
+      cost: 3,
+      prerequisites: ['power-default'],
+      column: 7,
+      row: 0,
+    });
+
+    this.addNode({
+      id: 'power-electric',
+      name: 'Explosão Elétrica',
+      description: 'Descargas elétricas no mapa',
+      value: 55,
+      level: 2,
+      currentLevel: 0,
+      cost: 3,
+      prerequisites: ['power-lightning'],
+      column: 6,
+      row: 1,
+    });
+
+    // Tier 2 - Poderes avançados
+    this.addNode({
+      id: 'power-fire',
+      name: 'Chuva de Fogo',
+      description: 'Explosões de fogo caem no mapa',
+      value: 45,
+      level: 3,
+      currentLevel: 0,
+      cost: 4,
+      prerequisites: ['power-lightning', 'power-default'],
+      column: 5,
+      row: 1,
+    });
+
+    this.addNode({
+      id: 'power-atomic',
+      name: 'Explosão Atômica',
+      description: 'Explosões nucleares massivas',
+      value: 80,
+      level: 2,
+      currentLevel: 0,
+      cost: 5,
+      prerequisites: ['power-lightning', 'power-fire'],
+      column: 5,
+      row: 2,
+    });
+
+    this.addNode({
+      id: 'power-water-fire',
+      name: 'Inferno Aquático',
+      description: 'Combinação de água e fogo',
+      value: 60,
+      level: 2,
+      currentLevel: 0,
+      cost: 4,
+      prerequisites: ['power-fire', 'power-toxic'],
+      column: 6,
+      row: 2,
+    });
   }
 
   private addNode(node: UpgradeTreeNode) {
@@ -239,6 +333,15 @@ export class UpgradeTree {
   getAvailableUpgrades(): UpgradeTreeNode[] {
     return Array.from(this.nodes.values()).filter((node) => {
       const stateInfo = this.state[node.id];
+      // Se o estado não foi inicializado, inicializa agora
+      if (!stateInfo) {
+        this.state[node.id] = {
+          currentLevel: 0,
+          unlocked: node.prerequisites.length === 0,
+          maxLevel: node.level,
+        };
+        return node.prerequisites.length === 0;
+      }
       return (
         stateInfo.unlocked &&
         stateInfo.currentLevel < node.level &&
@@ -249,12 +352,36 @@ export class UpgradeTree {
 
   // Obtém todos os upgrades
   getAllUpgrades(): UpgradeTreeNode[] {
-    return Array.from(this.nodes.values());
+    const upgrades = Array.from(this.nodes.values());
+    // Inicializa estado de todos os upgrades se não existir
+    upgrades.forEach(node => {
+      if (!this.state[node.id]) {
+        this.state[node.id] = {
+          currentLevel: 0,
+          unlocked: node.prerequisites.length === 0,
+          maxLevel: node.level,
+        };
+      }
+    });
+    return upgrades;
   }
 
   // Obtém o estado atual de um upgrade
   getUpgradeState(upgradeId: string) {
-    return this.state[upgradeId];
+    const state = this.state[upgradeId];
+    if (!state) {
+      const node = this.nodes.get(upgradeId);
+      if (node) {
+        this.state[upgradeId] = {
+          currentLevel: 0,
+          unlocked: node.prerequisites.length === 0,
+          maxLevel: node.level,
+        };
+        return this.state[upgradeId];
+      }
+      return null;
+    }
+    return state;
   }
 
   // Salva o estado no local storage

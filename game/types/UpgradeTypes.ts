@@ -1,10 +1,12 @@
 import { WeaponData } from './WeaponTypes';
+import { AreaEffectType } from './AreaEffectTypes';
 
 // Tipos de upgrade disponíveis
 export enum UpgradeType {
   WEAPON = 'weapon',
   STAT = 'stat',
   ABILITY = 'ability',
+  AREA_POWER = 'area_power',
 }
 
 // Tipos de stat que podem ser melhorados
@@ -48,8 +50,19 @@ export interface AbilityUpgrade {
   iconPath?: string;
 }
 
+// Interface para upgrade de poder de área
+export interface AreaPowerUpgrade {
+  type: UpgradeType.AREA_POWER;
+  powerType: AreaEffectType;
+  name: string;
+  description: string;
+  baseDamage: number;
+  cooldown: number;
+  iconPath?: string;
+}
+
 // Union type para todos os upgrades
-export type Upgrade = StatUpgrade | WeaponUpgrade | AbilityUpgrade;
+export type Upgrade = StatUpgrade | WeaponUpgrade | AbilityUpgrade | AreaPowerUpgrade;
 
 // Interface para opções de upgrade apresentadas ao jogador
 export interface UpgradeOptions {
