@@ -201,6 +201,12 @@ export class Player {
     return false;
   }
 
+  // Método público para Dev Mode
+  devLevelUp() {
+    this.levelUp();
+    this.levelUpCallbacks.forEach(callback => callback(this.state.level));
+  }
+
   private levelUp() {
     this.state.level++;
     this.state.xp -= this.state.xpToNextLevel;

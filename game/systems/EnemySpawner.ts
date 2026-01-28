@@ -1,6 +1,6 @@
 import { Enemy } from '../entities/Enemy';
 import { GAME_CONFIG } from '../config/gameConfig';
-import { ENEMY_DEFINITIONS, getBossEnemies, getNonBossEnemies } from '../data/EnemyDatabase';
+import { getBossEnemies, getNonBossEnemies } from '../data/EnemyDatabase';
 import { EnemyDefinition } from '../types/EnemyTypes';
 
 export class EnemySpawner {
@@ -81,6 +81,11 @@ export class EnemySpawner {
     const definition = this.pickEnemyDefinition();
     const enemy = new Enemy(definition, x, y);
     this.enemies.push(enemy);
+  }
+
+  // Método público para Dev Mode
+  devSpawnBoss() {
+    this.spawnBoss();
   }
 
   private spawnBoss() {

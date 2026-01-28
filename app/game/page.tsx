@@ -19,6 +19,7 @@ import { WeaponReplaceModal } from '@/components/WeaponReplaceModal';
 import { WeaponInventoryUI } from '@/components/WeaponInventoryUI';
 import { UpgradeSelectionModal } from '@/components/UpgradeSelectionModal';
 import { StarterWeaponModal } from '@/components/StarterWeaponModal';
+import { DevMode } from '@/components/DevMode';
 import { Chest } from '@/game/entities/Chest';
 import { UpgradeSystem } from '@/game/upgrades/UpgradeSystem';
 import { Upgrade, UpgradeType, StatUpgrade, WeaponUpgrade, StatType, AreaPowerUpgrade } from '@/game/types/UpgradeTypes';
@@ -314,7 +315,6 @@ export default function GamePage() {
           upgradeSystemRef.current.setPlayerLevel(newLevel);
           const hasSpace = player.hasWeaponSpace();
           const options = upgradeSystemRef.current.generateUpgradeOptions(3, hasSpace);
-          console.log('Opções de upgrade geradas:', options.length, options);
           setUpgradeOptions(options);
           setShowUpgradeSelection(true);
 
@@ -695,6 +695,46 @@ export default function GamePage() {
           playerLevel={playerLevel}
         />
       )}
+
+      {/* Dev Mode */}
+      <DevMode
+        isGamePaused={isPaused}
+        onLevelUp={() => {
+          if (playerRef.current && !isPaused) return;
+          if (playerRef.current) {
+            playerRef.current.devLevelUp();
+            const newLevel = playerRef.current.getState().level;
+            setPlayerLevel(newLevel);
+            upgradeSystemRef.current.setPlayerLevel(newLevel);
+            const hasSpace = playerRef.current.hasWeaponSpace();
+            const options = upgradeSystemRef.current.generateUpgradeOptions(3, hasSpace);
+            setUpgradeOptions(options);
+            setShowUpgradeSelection(true);
+            engineRef.current?.pause();
+          }
+        }}
+        onSpawnBoss={() => {
+          if (enemySpawnerRef.current && !isPaused) return;
+          if (enemySpawnerRef.current) {
+            enemySpawnerRef.current.devSpawnBoss();
+          }
+        }}
+        onHealPlayer={() => {
+          if (playerRef.current && !isPaused) return;
+          if (playerRef.current) {
+            const currentHealth = playerRef.current.getState().health;
+            const maxHealth = playerRef.current.getState().maxHealth;
+            const healAmount = maxHealth - currentHealth;
+            playerRef.current.heal(healAmount);
+          }
+        }}
+        onAddMaxHealth={() => {
+          if (playerRef.current && !isPaused) return;
+          if (playerRef.current) {
+            playerRef.current.increaseMaxHealth(100);
+          }
+        }}
+      />
 
       <div className="absolute bottom-1 left-1 sm:bottom-2 sm:left-2 text-cyan-400 font-mono text-[10px] sm:text-xs z-30 leading-tight">
         <p>&gt; WASD/↑↓←→: Mover</p>
