@@ -542,6 +542,13 @@ export default function GamePage() {
           break;
         case StatType.DAMAGE:
           playerRef.current.increaseDamage(statUpgrade.value);
+          // Também aplica ao DataDiskWeapon
+          if (weaponRef.current) {
+            const damageMultiplier = statUpgrade.value;
+            const newDamage = weaponRef.current.getDamage() * (1 + damageMultiplier);
+            const damageIncrease = newDamage - weaponRef.current.getDamage();
+            weaponRef.current.increaseDamage(damageIncrease);
+          }
           break;
         case StatType.ATTACK_SPEED:
           playerRef.current.increaseAttackSpeed(statUpgrade.value);
@@ -555,7 +562,9 @@ export default function GamePage() {
         case StatType.PROJECTILE_COUNT:
           // Adiciona novo projétil ao DataDiskWeapon
           if (weaponRef.current) {
-            weaponRef.current.addProjectile();
+            for (let i = 0; i < statUpgrade.value; i++) {
+              weaponRef.current.addProjectile();
+            }
           }
           break;
       }

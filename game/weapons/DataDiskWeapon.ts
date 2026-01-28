@@ -56,8 +56,7 @@ export class DataDiskWeapon {
     this.damage += amount;
     // Aumenta o dano de todos os projéteis existentes
     this.projectiles.forEach(p => {
-      const state = p.getState();
-      state.damage += amount;
+      p.setDamage(p.getState().damage + amount);
     });
   }
 

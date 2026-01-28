@@ -120,7 +120,7 @@ export class EnemySpawner {
     // Filtra inimigos elite se o primeiro boss ainda não foi derrotado
     let availableEnemies = this.enemyPool;
     if (!this.firstBossDefeated) {
-      availableEnemies = this.enemyPool.filter(def => 
+      availableEnemies = this.enemyPool.filter(def =>
         !def.id.includes('elite')
       );
     }

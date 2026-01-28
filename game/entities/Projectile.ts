@@ -43,6 +43,10 @@ export class Projectile {
     this.state.y = y;
   }
 
+  setDamage(damage: number) {
+    this.state.damage = damage;
+  }
+
   deactivate() {
     this.state.active = false;
   }
