@@ -47,14 +47,16 @@ export default function UpgradesPage() {
 
       const newCounts = { ...upgradeCounts };
       const state = upgradeTree.getUpgradeState(upgrade.id);
-      newCounts[upgrade.id] = {
-        current: state.currentLevel,
-        max: upgrade.level,
-      };
-      setUpgradeCounts(newCounts);
+      if (state) {
+        newCounts[upgrade.id] = {
+          current: state.currentLevel,
+          max: upgrade.level,
+        };
+        setUpgradeCounts(newCounts);
 
-      if (selectedUpgrade?.id === upgrade.id) {
-        setSelectedUpgrade({ ...upgrade, currentLevel: state.currentLevel });
+        if (selectedUpgrade?.id === upgrade.id) {
+          setSelectedUpgrade({ ...upgrade, currentLevel: state.currentLevel });
+        }
       }
     }
   };
