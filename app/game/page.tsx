@@ -37,6 +37,7 @@ export default function GamePage() {
   const inputRef = useRef({ x: 0, y: 0 });
   const damageTimerRef = useRef(0);
   const mousePositionRef = useRef({ x: 0, y: 0 });
+  const backgroundImageRef = useRef<HTMLImageElement | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -99,6 +100,11 @@ export default function GamePage() {
     const canvas = canvasRef.current;
     const engine = new GameEngine(canvas);
     engineRef.current = engine;
+
+    // Carregar imagem de fundo
+    const backgroundImage = new Image();
+    backgroundImage.src = '/fundo gameplay/fundo-jogo.png';
+    backgroundImageRef.current = backgroundImage;
 
     const chestSpawner = new ChestSpawner();
     chestSpawnerRef.current = chestSpawner;
@@ -364,9 +370,25 @@ export default function GamePage() {
     });
 
     engine.onRender((ctx) => {
-      ctx.fillStyle = '#0a0a0a';
+      // Renderizar imagem de fundo como padrão (pattern)
+      if (backgroundImageRef.current && backgroundImageRef.current.complete) {
+        const pattern = ctx.createPattern(backgroundImageRef.current, 'repeat');
+        if (pattern) {
+          ctx.fillStyle = pattern;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      } else {
+        // Fallback: fundo preto se imagem não carregou
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      // Overlay escuro para deixar o fundo mais escuro
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+
+      // Grid overlay com efeito cyberpunk
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.08)';
       ctx.lineWidth = 1;
       const gridSize = 50;
       for (let x = 0; x < canvas.width; x += gridSize) {
@@ -627,7 +649,7 @@ export default function GamePage() {
         ref={canvasRef}
         width={canvasDimensions.width}
         height={canvasDimensions.height}
-        className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] rounded-lg object-contain"
+        className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] rounded-lg object-contain max-w-full max-h-full"
       />
       {isPaused && !showUpgradeSelection && !showStarterWeaponSelection && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
