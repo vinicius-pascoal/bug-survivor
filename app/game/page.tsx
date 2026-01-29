@@ -8,6 +8,7 @@ import { EnemySpawner } from '@/game/systems/EnemySpawner';
 import { XPDropSystem } from '@/game/systems/XPDropSystem';
 import { ChestSpawner } from '@/game/systems/ChestSpawner';
 import { AreaEffectSystem } from '@/game/systems/AreaEffectSystem';
+import { MedkitSpawner } from '@/game/systems/MedkitSpawner';
 import { DataDiskWeapon } from '@/game/weapons/DataDiskWeapon';
 import { GAME_CONFIG } from '@/game/config/gameConfig';
 import { formatTime } from '@/utils/helpers';
@@ -32,6 +33,7 @@ export default function GamePage() {
   const enemySpawnerRef = useRef<EnemySpawner | null>(null);
   const xpDropSystemRef = useRef<XPDropSystem | null>(null);
   const chestSpawnerRef = useRef<ChestSpawner | null>(null);
+  const medkitSpawnerRef = useRef<MedkitSpawner | null>(null);
   const weaponRef = useRef<DataDiskWeapon | null>(null);
   const areaEffectSystemRef = useRef<AreaEffectSystem | null>(null);
   const inputRef = useRef({ x: 0, y: 0 });
@@ -44,6 +46,26 @@ export default function GamePage() {
   const [survivalTime, setSurvivalTime] = useState(0);
   const [killCount, setKillCount] = useState(0);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 1920, height: 1080 });
+  const [healAnimation, setHealAnimation] = useState<{ active: boolean; timer: number }>({ active: false, timer: 0 });
+
+  // Corrige bug do overlay de cura persistente
+  useEffect(() => {
+    if (!healAnimation.active) return;
+    if (healAnimation.timer <= 0) {
+      setHealAnimation({ active: false, timer: 0 });
+      return;
+    }
+    const interval = setInterval(() => {
+      setHealAnimation(prev => {
+        const newTimer = prev.timer - 0.016; // Aproximadamente 60fps
+        if (newTimer <= 0) {
+          return { active: false, timer: 0 };
+        }
+        return { active: true, timer: newTimer };
+      });
+    }, 16);
+    return () => clearInterval(interval);
+  }, [healAnimation.active, healAnimation.timer]);
 
   // Estados para sistema de armas
   const [pendingWeapon, setPendingWeapon] = useState<WeaponData | null>(null);
@@ -108,6 +130,9 @@ export default function GamePage() {
 
     const chestSpawner = new ChestSpawner();
     chestSpawnerRef.current = chestSpawner;
+
+    const medkitSpawner = new MedkitSpawner();
+    medkitSpawnerRef.current = medkitSpawner;
 
     const player = new Player(canvas.width / 2, canvas.height / 2);
     playerRef.current = player;
@@ -197,6 +222,9 @@ export default function GamePage() {
       const playerState = player.getState();
       const playerPos = player.getPosition();
 
+
+      // (Removido: controle do timer da animação de cura agora está no useEffect)
+
       // Calculate angle from player to mouse
       const dx = mousePositionRef.current.x - playerPos.x;
       const dy = mousePositionRef.current.y - playerPos.y;
@@ -221,6 +249,20 @@ export default function GamePage() {
       // Verifica colisão com baús
       const nearbyChest = chestSpawner.checkCollisions(playerPos.x, playerPos.y, playerState.width / 2);
       nearbyChestRef.current = nearbyChest;
+
+      // Atualiza medkit spawner
+      medkitSpawner.update(deltaTime, playerPos.x, playerPos.y);
+
+      // Verifica colisão com medkits
+      const nearbyMedkit = medkitSpawner.checkCollisions(playerPos.x, playerPos.y, playerState.width / 2);
+      if (nearbyMedkit) {
+        const healPercentage = nearbyMedkit.collect();
+        const healAmount = playerState.maxHealth * healPercentage;
+        player.heal(healAmount);
+        
+        // Ativa animação de cura (0.8 segundos)
+        setHealAnimation({ active: true, timer: 0.8 });
+      }
 
       weapon.update(deltaTime, playerPos.x, playerPos.y);
       enemySpawner.update(deltaTime, engine.getElapsedTime());
@@ -408,6 +450,7 @@ export default function GamePage() {
       weapon.render(ctx);
       areaEffectSystem.render(ctx);
       chestSpawner.render(ctx);
+      medkitSpawner.render(ctx);
       enemySpawner.getEnemies().forEach(enemy => enemy.render(ctx));
       xpDropSystem.render(ctx);
 
@@ -651,6 +694,18 @@ export default function GamePage() {
         height={canvasDimensions.height}
         className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] rounded-lg object-contain max-w-full max-h-full"
       />
+      
+      {/* Animação de cura */}
+      {healAnimation.active && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(circle, rgba(0, 255, 0, ${healAnimation.timer * 0.4}) 0%, transparent 60%)`,
+            opacity: healAnimation.timer / 0.8
+          }}
+        />
+      )}
+
       {isPaused && !showUpgradeSelection && !showStarterWeaponSelection && (
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-linear-to-br from-purple-900/50 to-cyan-900/50 p-6 sm:p-8 rounded-lg border-2 border-cyan-400 shadow-[0_0_50px_rgba(6,182,212,0.8)] w-full max-w-sm">
