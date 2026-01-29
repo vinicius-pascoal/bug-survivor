@@ -39,7 +39,7 @@ export class Medkit {
 
   update(deltaTime: number) {
     if (!this.state.active) return;
-    
+
     // Animação de pulso
     this.pulseTimer += deltaTime * 2;
   }
@@ -72,7 +72,7 @@ export class Medkit {
       // Fallback: desenhar cruz verde
       ctx.fillStyle = '#00ff00';
       ctx.fillRect(renderX - size / 2, renderY - size / 2, size, size);
-      
+
       // Cruz branca
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(renderX - size / 2 + size * 0.3, renderY - size / 2 + size * 0.1, size * 0.4, size * 0.8);
@@ -94,7 +94,7 @@ export class Medkit {
 
   collect(): number {
     if (!this.state.active) return 0;
-    
+
     this.state.active = false;
     return this.state.healPercentage;
   }

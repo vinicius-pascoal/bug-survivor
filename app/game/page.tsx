@@ -259,7 +259,7 @@ export default function GamePage() {
         const healPercentage = nearbyMedkit.collect();
         const healAmount = playerState.maxHealth * healPercentage;
         player.heal(healAmount);
-        
+
         // Ativa animação de cura (0.8 segundos)
         setHealAnimation({ active: true, timer: 0.8 });
       }
@@ -694,10 +694,10 @@ export default function GamePage() {
         height={canvasDimensions.height}
         className="border-2 border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)] rounded-lg object-contain max-w-full max-h-full"
       />
-      
+
       {/* Animação de cura */}
       {healAnimation.active && (
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300"
           style={{
             background: `radial-gradient(circle, rgba(0, 255, 0, ${healAnimation.timer * 0.4}) 0%, transparent 60%)`,

@@ -129,7 +129,10 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                 <span className="text-cyan-300 font-bold">Conceito:</span> Jogo survivors-like cyberpunk
               </p>
               <p className="text-gray-300 mt-2">
-                <span className="text-cyan-300 font-bold">Versão:</span> 0.1.0 (Alpha)
+                <span className="text-cyan-300 font-bold">Versão:</span> 1.0.0 (Alpha)
+              </p>
+              <p className="text-gray-300 mt-2">
+                <span className="text-cyan-300 font-bold">Fontes das imagens:</span> pixellab, craftpix, Gemini
               </p>
             </div>
           </section>

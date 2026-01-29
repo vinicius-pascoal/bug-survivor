@@ -211,7 +211,7 @@ export default function MainMenu() {
         {/* Footer Info */}
         <div className="mt-16 text-center">
           <p className="text-sm text-cyan-300 font-mono opacity-70">
-            v0.1.0 | Desenvolvido por Vinicius Pascoal
+            v1.0.0 | Desenvolvido por Vinicius Pascoal
           </p>
         </div>
       </div>
